@@ -1,0 +1,160 @@
+===============================================================
+   SUPPORTBOX - PROJETO COMPLETO
+   Frontend + Backend, com o agente de triagem por IA
+===============================================================
+
+
+SAO DOIS PROGRAMAS SEPARADOS
+----------------------------
+
+   supportbox-backend    a API e as regras     porta 4000
+   supportbox-frontend   as telas              porta 3000
+
+Voce vai precisar de DOIS terminais, um para cada.
+
+Pre-requisito: Node.js 18 ou mais novo.  (node -v)
+
+
+COMO RODAR - PASSO A PASSO
+--------------------------
+
+1) BACKEND - instalar
+
+      cd supportbox-backend
+      npm install
+
+2) BACKEND - criar o .env
+
+   Copie o .env.example para .env e preencha DUAS variaveis:
+
+      DATABASE_URL=...
+      GEMINI_API_KEY=...
+
+   Detalhes de cada uma logo abaixo.
+
+3) BACKEND - subir
+
+      npm run dev
+
+   Deve aparecer:  [supportbox-backend] http://localhost:4000
+
+4) FRONTEND - em OUTRO terminal
+
+      cd supportbox-frontend
+      npm install
+      copie o .env.local.example para .env.local
+      npm run dev
+
+5) Abra no navegador:  http://localhost:3000
+
+
+BANCO DE DADOS
+--------------
+
+O CODIGO E O MESMO para PostgreSQL local e para Supabase.
+Nao muda nenhum arquivo .ts - muda so a DATABASE_URL.
+
+  Postgres local:
+    DATABASE_URL=postgresql://supportbox:SENHA@192.168.0.10:5432/supportbox
+
+  Supabase:
+    DATABASE_URL=postgresql://postgres.PROJETO:SENHA@aws-0-REGIAO.pooler.supabase.com:5432/postgres
+    (painel > Connect > aba Direct > Session pooler)
+
+O SSL liga sozinho: o src/db.ts percebe se o endereco e de
+rede local (sem SSL) ou da internet (com SSL).
+
+TABELAS: rodar UMA VEZ o banco/schema.sql no banco de voces.
+Passo a passo completo em banco/COMO_RODAR.md
+
+
+CHAVE DA IA
+-----------
+
+Pegue de graca (sem cartao) em:
+   https://aistudio.google.com/apikey
+
+Coloque no .env do backend:
+   GEMINI_API_KEY=sua-chave-aqui
+
+Sem ela o backend NAO SOBE - para na partida com mensagem
+clara dizendo o que falta.
+
+
+OS .env NAO VIERAM AQUI
+-----------------------
+
+De proposito: guardam a senha do banco e a chave da IA.
+Arquivo com segredo nao circula por zip.
+
+Use os modelos que vieram junto:
+   supportbox-backend/.env.example         -> .env
+   supportbox-frontend/.env.local.example  -> .env.local
+
+
+COMO USAR O SISTEMA
+-------------------
+
+LOGIN (temporario, sem senha de verdade):
+   e-mail com a palavra "agente"  -> entra como AGENTE
+   qualquer outro e-mail          -> entra como SOLICITANTE
+   a senha e ignorada
+
+DEMONSTRAR A IA:
+   1. entre como solicitante
+   2. preencha titulo, descricao e categoria
+   3. clique em "Analisar com IA"
+   4. aparecem os passos sugeridos e a prioridade
+   5. clique em "Enviar" - o chamado e criado JA com a
+      prioridade que a IA sugeriu
+
+
+SE A IA FALHAR NA HORA
+----------------------
+
+Nao se desesperem. O plano B assume: a caixa mostra
+"Nao foi possivel analisar agora. Voce pode enviar o chamado
+normalmente" - e o Enviar continua funcionando.
+
+O Gemini gratuito as vezes fica sobrecarregado. Isso e BOM de
+mostrar: prova que a IA nunca impede a abertura de um chamado.
+
+
+PROBLEMAS COMUNS
+----------------
+
+"EADDRINUSE: address already in use :::4000"
+   Ja existe um servidor rodando (talvez orfao de um terminal
+   fechado). Resolva com:  npx kill-port 4000
+
+Faixa vermelha "Failed to fetch"
+   O backend nao esta no ar, ou a mensagem ficou de antes.
+   Suba o backend e recarregue a pagina (F5).
+
+"tenant/user ... not found"  (so no Supabase)
+   O projeto foi pausado por inatividade. Entre no painel do
+   Supabase e clique em Restore project. Leva uns 3 minutos.
+   >> CONFIRAM ISSO ANTES DA APRESENTACAO.
+
+
+DOCUMENTACAO
+------------
+
+   PASSO_A_PASSO_IA.md    como o agente de IA foi construido
+   REGRAS_DE_NEGOCIO.md   as 7 regras do sistema
+   banco/COMO_RODAR.md    montar o banco de dados
+   README.md              (um em cada projeto)
+
+
+O QUE FOI FEITO NESTA VERSAO
+----------------------------
+
+- Agente de triagem por IA (Gemini 2.5 Flash) no backend
+- Botao "Analisar com IA" no formulario do solicitante
+- A prioridade sugerida pela IA agora e gravada no chamado
+- Documentacao do backend enxugada: de 2.146 para 1.224
+  linhas, SEM alterar codigo que executa
+
+Os dois projetos compilam sem erro (npx tsc --noEmit).
+
+===============================================================

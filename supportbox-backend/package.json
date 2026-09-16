@@ -1,0 +1,23 @@
+{
+  "name": "supportbox-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "API REST do SupportBox - camada Controller e camada Model (dividida em Service e DAO).",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.18.0",
+    "dotenv": "^17.4.2",
+    "pg": "^8.23.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/pg": "^8.21.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

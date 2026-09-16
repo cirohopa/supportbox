@@ -1,0 +1,655 @@
+==============================================================
+   SUPPORTBOX - FRONTEND
+   O que foi feito em 09/09/2026
+==============================================================
+
+Este documento explica as mudanças do dia no frontend.
+
+Ele foi escrito para quem NÃO acompanhou o desenvolvimento.
+Se você ler da parte 0 até a parte 2, consegue explicar o que
+foi feito. As partes 3 em diante são consulta.
+
+   Parte 0   Antes de começar (leia primeiro)
+   Parte 1   As mudanças, uma a uma
+   Parte 2   Como funciona por dentro
+   Parte 3   Armadilhas que já nos pegaram
+   Parte 4   Como testar na sua máquina
+   Parte 5   O que ainda falta
+
+
+==============================================================
+   PARTE 0 - ANTES DE COMEÇAR
+==============================================================
+
+
+0.1  O QUE MUDOU, EM QUATRO LINHAS
+--------------------------------------------------------------
+
+1. A área do agente ganhou uma tela nova, o Painel de Dados,
+   com três indicadores.
+2. Os números desses indicadores vêm do backend de verdade.
+3. O menu lateral do agente agora tem dois botões, e o antigo
+   "Painel" virou "Tickets".
+4. O cabeçalho da tela do solicitante ganhou o ícone do logo.
+
+O BACKEND NÃO FOI ALTERADO. Nenhuma rota nova, nenhum SQL
+novo, nenhum arquivo do backend tocado. A parte 2.3 explica
+por quê.
+
+
+0.2  COMO A TELA NOVA FICOU
+--------------------------------------------------------------
+
+   +----------------+------------------------------------+
+   | SupportBox     |  Painel de Dados                   |
+   | Área do agente |  Indicadores de volume...          |
+   |                |                                    |
+   |  [] Tickets    |  +--------+ +--------+ +--------+  |
+   |  [#] Painel    |  |REQUISI-| |INCIDEN-| |SEM     |  |
+   |      de Dados  |  |ÇÕES    | |TES     | |AGENTE  |  |
+   |                |  |   12   | |   27   | |   5    |  |
+   |                |  +--------+ +--------+ +--------+  |
+   |                |                                    |
+   | usuario@...    |                                    |
+   | Sair           |                                    |
+   +----------------+------------------------------------+
+
+O botão em que a pessoa está fica destacado em laranja. Na
+imagem acima, o Painel de Dados.
+
+
+0.3  SEIS PALAVRAS QUE APARECEM O TEMPO TODO
+--------------------------------------------------------------
+
+Se estes seis termos estiverem claros, o resto do documento
+se lê sozinho.
+
+ROTA (ou endereço)
+   O que a pessoa digita depois do localhost:3000. Exemplos:
+   /login, /agente, /agente/dados. Cada rota abre uma tela.
+
+COMPONENTE
+   Um pedaço de tela guardado num arquivo, para ser usado
+   várias vezes. O botão, o cartão e o menu lateral são
+   componentes. Na prática é uma função que devolve o
+   desenho.
+
+PROPS
+   As informações que você passa para um componente na hora
+   de usá-lo. É o que faz o mesmo cartão mostrar
+   "Requisições 12" numa vez e "Incidentes 27" na outra.
+
+INTERFACE
+   A lista do que um componente exige receber, e de que tipo.
+   Ela não desenha nada. Serve para o editor avisar na hora
+   se você esquecer algo ou passar o tipo errado.
+
+ESTADO
+   Uma informação que a tela guarda e que pode mudar enquanto
+   a pessoa usa. Quando o estado muda, o React redesenha a
+   tela sozinho.
+
+IMPORT
+   A linha no topo do arquivo que traz algo de outro arquivo.
+   Sem o import, o que está lá fora não existe aqui dentro.
+
+
+0.4  MAPA DOS ARQUIVOS MEXIDOS
+--------------------------------------------------------------
+
+NOVOS
+
+   public/logo-supportbox-icone.png
+      A imagem da caixa do logo.
+
+   src/app/agente/dados/page.tsx
+      A tela Painel de Dados. Busca os chamados e monta os
+      cartões.
+
+   src/views/agente/MoldeCartaoDados.tsx
+      O componente do cartão. Usado três vezes.
+
+ALTERADOS
+
+   src/views/agente/MenuLateralAgente.tsx
+      O menu da esquerda. Ganhou o botão novo e o destaque
+      por página.
+
+   src/views/compartilhado/Cabecalho.tsx
+      A faixa do topo na tela do solicitante. Ganhou o ícone.
+
+ONDE CADA COISA MORA, COMO REGRA DO PROJETO
+
+   src/app/      as rotas. cada pasta é um endereço.
+   src/views/    os componentes visuais.
+   src/lib/      a conversa com o backend e a sessão.
+
+Tudo compila sem erro:  npx tsc --noEmit
+
+
+==============================================================
+   PARTE 1 - AS MUDANÇAS, UMA A UMA
+==============================================================
+
+
+1.1  ÍCONE NO CABEÇALHO DO SOLICITANTE
+--------------------------------------------------------------
+
+O QUE MUDOU
+   Antes só aparecia o nome "SupportBox" escrito. Agora tem o
+   ícone da caixa à esquerda dele.
+
+ONDE
+   src/views/compartilhado/Cabecalho.tsx
+
+COMO
+   <Image
+     src="/logo-supportbox-icone.png"
+     alt=""
+     width={160}
+     height={160}
+     priority
+     className="w-9 h-9"
+   />
+
+POR QUE UM ÍCONE RECORTADO, E NÃO O LOGO INTEIRO
+   O logo completo já tem a palavra "SupportBox" desenhada
+   dentro. Como o nome também aparece em texto ao lado, o
+   logo inteiro deixaria o nome duplicado. Então recortamos
+   só a caixa e salvamos num arquivo separado.
+
+
+1.2  O BOTÃO "PAINEL" VIROU "TICKETS"
+--------------------------------------------------------------
+
+O QUE MUDOU
+   O texto e o ícone do primeiro botão do menu do agente. O
+   ícone passou de LayoutDashboard para Ticket, os dois da
+   biblioteca lucide-react.
+
+ONDE
+   src/views/agente/MenuLateralAgente.tsx
+
+O QUE NÃO MUDOU
+   A rota. Continua /agente, e abre exatamente a mesma tela
+   de antes. Só o rótulo e o desenho mudaram.
+
+POR QUE
+   É a tela em que a pessoa cai ao entrar, e a ideia é ela
+   dar de cara com todos os chamados. "Tickets" diz isso
+   melhor que "Painel".
+
+
+1.3  O BOTÃO NOVO "PAINEL DE DADOS"
+--------------------------------------------------------------
+
+Foi feito em três passos, e a ordem importa.
+
+
+PASSO 1 - CRIAR A ROTA
+
+   No Next, A PASTA É O ENDEREÇO. Não existe arquivo onde se
+   cadastram rotas.
+
+      src/app/agente/page.tsx    ->  abre em  /agente
+      src/app/login/page.tsx     ->  abre em  /login
+
+   Então criamos a pasta src/app/agente/dados e, dentro
+   dela, o arquivo page.tsx. O nome do arquivo precisa ser
+   exatamente esse.
+
+   A BARRA LATERAL APARECE SOZINHA na tela nova. Ela mora no
+   layout.tsx da pasta /agente, e um layout vale para todas
+   as páginas dentro daquela pasta.
+
+   Testamos digitando localhost:3000/agente/dados direto no
+   navegador, antes de existir botão nenhum. Funcionou. Isso
+   mostra que a rota existe porque a pasta existe, e que o
+   botão é só um atalho até ela.
+
+
+PASSO 2 - CRIAR O BOTÃO
+
+   Duas coisas no MenuLateralAgente.tsx.
+
+   a) trazer o ícone, no import do topo do arquivo:
+
+      import { ChartColumn, Ticket, LogOut } from "lucide-react";
+
+   b) escrever o segundo link, DENTRO do <nav>:
+
+      <Link
+        href="/agente/dados"
+        className={[
+          "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
+          emDados
+            ? "bg-marca-fraca text-marca-forte font-medium"
+            : "text-tintaFraca hover:bg-fundo",
+        ].join(" ")}
+      >
+        <ChartColumn className="w-4 h-4" />
+        Painel de Dados
+      </Link>
+
+   O <nav> ganhou "space-y-1" no className, senão os dois
+   botões ficam colados um no outro.
+
+   Aquele className em formato de lista é só isto: dois
+   pedaços de texto colados com espaço pelo .join(" "). O
+   primeiro vale sempre. O segundo depende do emDados, e o
+   "? :" funciona como um se/senão curto.
+
+
+PASSO 3 - FAZER O DESTAQUE FUNCIONAR
+
+   Depois do passo 2 o botão já navegava certo, mas a cor
+   ficava errada:
+
+      em /agente         ->  os DOIS botões acendiam
+      em /agente/dados   ->  NENHUM acendia
+
+   Porque existia uma linha só, lida pelos dois botões:
+
+      const ativo = caminho === "/agente";
+
+   Trocamos por duas, uma para cada botão:
+
+      const emTickets = caminho === "/agente";
+      const emDados   = caminho === "/agente/dados";
+
+   E cada link passou a ler a sua própria resposta.
+
+   A parte 2.1 explica como isso funciona por dentro.
+
+
+1.4  OS TRÊS CARTÕES
+--------------------------------------------------------------
+
+O QUE MUDOU
+   A tela Painel de Dados, que só tinha o título, ganhou uma
+   descrição e três cartões.
+
+O COMPONENTE DO CARTÃO
+   src/views/agente/MoldeCartaoDados.tsx
+
+      interface PropsMoldeCartaoDados {
+        rotulo: string;
+        valor: number;
+      }
+
+      export function MoldeCartaoDados({ rotulo, valor }: PropsMoldeCartaoDados) {
+        return (
+          <div className="bg-papel border border-linha rounded-md p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-tintaFraca">
+              {rotulo}
+            </p>
+            <p className="text-3xl font-semibold text-tinta mt-2">{valor}</p>
+          </div>
+        );
+      }
+
+   Leia assim: a interface no topo diz que este cartão exige
+   receber duas coisas, um rótulo em texto e um valor em
+   número. A função embaixo desenha o cartão com o que
+   recebeu.
+
+USANDO OS TRÊS NA TELA
+   src/app/agente/dados/page.tsx
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <MoldeCartaoDados rotulo="Requisições" valor={requisicoes} />
+        <MoldeCartaoDados rotulo="Incidentes" valor={incidentes} />
+        <MoldeCartaoDados rotulo="Sem Agente" valor={semAgente} />
+      </div>
+
+   O grid empilha os cartões no celular e coloca os três lado
+   a lado a partir de telas pequenas para cima.
+
+POR QUE FIZEMOS UM COMPONENTE, E NÃO TRÊS CARTÕES NA MÃO
+   O cartão se repete três vezes com a mesma moldura. Escrito
+   três vezes, qualquer ajuste depois viraria três ajustes, e
+   é assim que eles acabam ficando diferentes entre si.
+
+
+1.5  OS NÚMEROS REAIS
+--------------------------------------------------------------
+
+O QUE MUDOU
+   Os cartões deixaram de mostrar números inventados e
+   passaram a contar os chamados de verdade.
+
+ONDE
+   src/app/agente/dados/page.tsx
+
+AS TRÊS CONTAGENS
+
+   const requisicoes = chamados.filter((c) => c.tipo === "solicitacao").length;
+   const incidentes  = chamados.filter((c) => c.tipo === "incidente").length;
+   const semAgente   = chamados.filter((c) => c.agenteId === null).length;
+
+   O filter passa por todos os chamados e monta uma lista
+   menor, só com os que passam no teste. O .length conta
+   quantos sobraram.
+
+DE ONDE VEM A LISTA
+   Da mesma função que a tela de Tickets já usava, a
+   listarChamados, que fica no src/lib/api.ts.
+
+   A parte 2.2 explica o caminho completo, e a 2.3 explica
+   por que isso não exigiu mexer no backend.
+
+
+==============================================================
+   PARTE 2 - COMO FUNCIONA POR DENTRO
+==============================================================
+
+Esta parte é a que responde "mas como isso funciona de
+verdade?". São três explicações independentes.
+
+
+2.1  COMO O MENU SABE QUAL BOTÃO ACENDER
+--------------------------------------------------------------
+
+São três peças, em sequência.
+
+PEÇA 1 - descobrir onde a pessoa está
+
+   const caminho = usePathname();
+
+   O usePathname é uma função pronta do Next. Ela pergunta
+   qual endereço está aberto agora e devolve isso em texto.
+   Se a pessoa está no Painel de Dados, devolve o texto
+   "/agente/dados".
+
+PEÇA 2 - comparar com o endereço do botão
+
+   const emDados = caminho === "/agente/dados";
+
+   O === compara dois textos, caractere por caractere. Se
+   todos baterem, responde verdadeiro. Se qualquer um for
+   diferente, responde falso.
+
+   Repare: emDados NÃO guarda um endereço. Guarda a resposta
+   de uma pergunta, que só pode ser sim ou não.
+
+PEÇA 3 - escolher a cor
+
+   O className usa essa resposta para escolher entre o
+   conjunto de cores destacado e o discreto.
+
+PARA ENXERGAR, SUBSTITUA O VALOR NA LINHA
+
+   pessoa em /agente:
+      const emDados = "/agente" === "/agente/dados";
+      textos diferentes  ->  falso
+
+   pessoa em /agente/dados:
+      const emDados = "/agente/dados" === "/agente/dados";
+      textos iguais  ->  verdadeiro
+
+   Em cada situação só uma das duas constantes é verdadeira.
+   Por isso só um botão acende por vez.
+
+O QUE A COMPARAÇÃO NÃO COMPARA
+
+   Ela não compara as duas linhas do código. O href não
+   participa disso em momento nenhum.
+
+   Os participantes são apenas dois: o endereço aberto no
+   navegador, que muda conforme a pessoa navega, e um texto
+   fixo escrito à mão, que nunca muda.
+
+   O mesmo endereço aparece duas vezes no arquivo, no href e
+   na constante, mas com trabalhos diferentes:
+
+      o href       diz PARA ONDE IR
+      a constante  diz O QUE PINTAR
+
+   Teste mental que separa os dois:
+
+      trocar o endereço do href
+         -> o botão passa a abrir a tela errada
+
+      trocar o endereço da constante
+         -> o botão continua abrindo a tela certa,
+            só a cor acende na hora errada
+
+   Ou seja, o destaque é só visual. Sem ele nada deixa de
+   funcionar. O que se perde é a pessoa saber onde está.
+
+E UM DETALHE DO REACT
+
+   Essa conta não roda uma vez só. Quando alguém clica, o
+   endereço muda, o React redesenha o componente e as
+   comparações rodam de novo com o endereço novo.
+
+   Não escrevemos "apaga o destaque daqui e acende ali".
+   Escrevemos a regra de quando cada um deve estar aceso, e
+   o React refaz a conta sozinho. Essa é a diferença
+   principal em relação ao JavaScript puro.
+
+
+2.2  OS TRÊS MOMENTOS DA TELA DE DADOS
+--------------------------------------------------------------
+
+Buscar dados leva tempo. Por isso a tela não aparece pronta,
+ela aparece em três momentos.
+
+MOMENTO 1 - a tela aparece vazia
+
+   A lista de chamados começa vazia, então as três contagens
+   dão zero. É isso que a pessoa vê no primeiro instante.
+
+MOMENTO 2 - a busca acontece
+
+   A tela pede a lista ao backend e espera a resposta.
+
+MOMENTO 3 - a tela se redesenha
+
+   A resposta chega, a lista deixa de estar vazia, e o React
+   redesenha a tela com os números reais.
+
+Aquele piscar de zero é normal e dura o tempo da requisição.
+
+O CÓDIGO QUE FAZ ISSO
+
+   const [chamados, setChamados] = useState<ChamadoApi[]>([]);
+
+   useEffect(() => {
+     const s = lerSessao();
+     if (!s) {
+       router.replace("/login");
+       return;
+     }
+     listarChamados(s)
+       .then(({ itens }) => setChamados(itens))
+       .catch(() => setErro("Falha ao carregar os chamados."));
+   }, [router]);
+
+   O useState cria o estado, ou seja, a lista que a tela
+   guarda. Começa vazia. O setChamados é o único jeito de
+   trocar o conteúdo dela, e é ele que avisa o React que
+   precisa redesenhar.
+
+   O useEffect é o "faça isto depois que a tela aparecer".
+   Buscar dados não pode acontecer durante o desenho, então
+   fica aqui dentro.
+
+   O lerSessao confere quem está usando o sistema. Se não
+   houver ninguém entrado, manda para o login.
+
+POR QUE ESTA TELA PRECISA DE "use client"
+
+   Porque ela lê a sessão, que fica guardada no navegador, e
+   guarda estado. Isso só existe no navegador.
+
+   O MoldeCartaoDados NÃO precisa dessa linha, porque ele só
+   desenha o que recebe.
+
+
+2.3  POR QUE O BACKEND NÃO PRECISOU MUDAR
+--------------------------------------------------------------
+
+Porque ele já manda a informação. Cada chamado da lista vem
+inteiro:
+
+   {
+     "protocolo": "CH-2026-008",
+     "titulo": "Impressora não imprime",
+     "categoria": "hardware",
+     "tipo": "incidente",
+     "status": "aberto",
+     "prioridade": "alta",
+     "agenteId": null
+   }
+
+Os campos "tipo" e "agenteId" já estavam ali, em todos os
+chamados, desde antes deste painel existir.
+
+Se o navegador já recebeu a lista completa, contar quantos
+são incidentes não exige perguntar nada novo. A resposta já
+está na mão.
+
+QUANDO PRECISARIA MEXER NO BACKEND
+
+   1. Se o dado não viesse na resposta. Sem o campo "tipo",
+      não teria como contar por tipo.
+
+   2. Se a lista fosse enorme. Com 50 mil chamados, baixar
+      todos só para contar seria desperdício. Aí valeria
+      criar uma rota que devolve só os números, com o banco
+      fazendo a contagem.
+
+Nenhum dos dois é o caso. O sistema tem poucas dezenas de
+chamados, e a tela do agente já baixa todos de qualquer
+jeito para montar a lista. O custo já foi pago, então
+reaproveitar sai de graça.
+
+SE PERGUNTAREM "POR QUE NÃO FIZERAM NO BANCO?"
+
+   Porque o volume não justifica. E se o sistema crescer, a
+   mudança seria criar uma rota de contagem, e só o
+   page.tsx mudaria. Os cartões continuariam iguais.
+
+
+==============================================================
+   PARTE 3 - ARMADILHAS QUE JÁ NOS PEGARAM
+==============================================================
+
+Todas aconteceram de verdade durante o desenvolvimento.
+
+
+3.1  O LINK FORA DO <nav>
+
+   O botão novo ficou depois do </nav> em vez de dentro
+   dele, e foi parar no rodapé da barra lateral.
+
+   Motivo: o <nav> tem a classe "flex-1", que significa
+   "estique e ocupe todo o espaço sobrando". Como o botão
+   ficou fora, o <nav> esticou e empurrou o botão para baixo.
+
+   A ordem correta:
+
+      <nav ...>
+        <Link> Tickets </Link>
+        <Link> Painel de Dados </Link>
+      </nav>
+
+
+3.2  TROCAR O ÍCONE E ESQUECER O IMPORT
+
+   Para trocar um ícone é preciso mexer em duas linhas: a do
+   import, no topo, e a do uso. Só dá para usar o que estiver
+   listado no import.
+
+
+3.3  COMPARAR COM O RÓTULO DA TELA
+
+   O texto que a pessoa lê e o texto que o banco guarda são
+   diferentes:
+
+      rotulo="Requisições"          o que aparece na tela
+      c.tipo === "solicitacao"      o que o banco guarda
+
+   Minúsculo, sem acento e outra palavra. Comparar com
+   "Requisições" daria zero sempre.
+
+
+3.4  USAR O FORMATO ERRADO DE CHAMADO
+
+   O projeto tem dois formatos para chamado: o do backend
+   (ChamadoApi) e o das telas (ChamadoResumo). O
+   src/lib/mapeamento.ts traduz um no outro.
+
+   Só que nessa tradução ele descarta o campo "tipo", porque
+   as listas não precisavam dele.
+
+   Como o painel precisa do tipo, usamos a lista crua do
+   backend. Contar não precisa de rótulo bonito.
+
+
+3.5  ASPAS ONDE DEVERIA SER CHAVES
+
+      rotulo="Requisições"     aspas, porque recebe texto
+      valor={requisicoes}      chaves, porque ali é código
+
+   Escrever valor="12" passaria o texto "12", e a interface
+   pede número. O editor acusa na hora.
+
+
+3.6  ESQUECER O PNG NO COMMIT
+
+   O public/logo-supportbox-icone.png é arquivo novo. Se
+   ficar de fora do commit ou do zip, a imagem aparece
+   quebrada na máquina de quem baixar, sem erro nenhum no
+   terminal.
+
+
+==============================================================
+   PARTE 4 - COMO TESTAR NA SUA MÁQUINA
+==============================================================
+
+1. Suba o backend e o frontend, cada um no seu terminal.
+2. Entre com um e-mail que tenha a palavra "agente".
+3. Em /agente, confira que só o Tickets está destacado.
+4. Clique no Painel de Dados e confira que o destaque trocou
+   de lugar.
+5. Confira os três cartões lado a lado. Estreite a janela e
+   veja se eles empilham.
+6. Compare os números com a lista de Tickets, para ver se
+   fecham.
+7. Saia e entre como solicitante para ver o ícone no
+   cabeçalho.
+
+Compila sem erro:  npx tsc --noEmit
+
+
+==============================================================
+   PARTE 5 - O QUE AINDA FALTA
+==============================================================
+
+Vale assumir estas limitações antes que alguém pergunte.
+
+A DESCRIÇÃO DA TELA PROMETE MAIS DO QUE EXISTE
+   O subtítulo diz "volume, prioridade e tempo de
+   atendimento". Construídos mesmo estão só o volume por tipo
+   e a fila sem agente. Ou tratamos isso como o plano da
+   tela, deixando claro que está em etapas, ou mudamos o
+   subtítulo para prometer só o que já tem.
+
+NÃO HÁ FILTRO POR PERÍODO
+   Os números são o total desde sempre. Filtrar por data
+   exige estado novo, cálculo de datas e muda todos os
+   indicadores. É uma etapa própria.
+
+NÃO HÁ GRÁFICO
+   Só número. O próximo nível seria uma barra horizontal
+   mostrando a distribuição por situação (aberto, em
+   andamento, concluído). Dá para fazer com três div e
+   largura em porcentagem, sem biblioteca nenhuma.
+
+SE O BACKEND ESTIVER FORA DO AR
+   Os cartões mostram zero e aparece uma faixa vermelha de
+   erro acima deles.
+
+==============================================================

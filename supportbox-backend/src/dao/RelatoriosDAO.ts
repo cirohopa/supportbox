@@ -5,10 +5,11 @@
 // Todos os metodos sao assincronos, porque falar com o banco leva tempo.
 
 import { consultar } from "../db";
+import type { DadosRelatorio } from "../dominio";
 
 const TABELA = "chamados";
 
-export type RelatorioPorAtendente = {
+/*export type RelatorioPorAtendente = {
   agenteId: string;
   totalConcluidos: number;
   mediaHoras: number | null;
@@ -25,7 +26,7 @@ export type RelatorioAtendimentos = {
   mediaHorasConclusao: number | null;
   porAtendente: RelatorioPorAtendente[];
   porCategoria: RelatorioPorCategoria[];
-};
+}; */
 
 export class RelatoriosDAO {
   // Monta o relatorio inteiro do periodo [dataInicio, dataFim]. Cada bloco
@@ -36,7 +37,7 @@ export class RelatoriosDAO {
     dataInicio: Date,
     dataFim: Date,
   ): Promise<RelatorioAtendimentos> {
-    const [totalAbertos, concluidos, porAtendente, porCategoria] =
+    const [totalCriados, concluidos, porAtendente, porCategoria] =
       await Promise.all([
         this.contarAbertos(dataInicio, dataFim),
         this.contarConcluidosComMedia(dataInicio, dataFim),
@@ -45,9 +46,9 @@ export class RelatoriosDAO {
       ]);
 
     return {
-      totalAbertos,
-      totalConcluidos: concluidos.total,
-      mediaHorasConclusao: concluidos.mediaHoras,
+      totalCriados,
+      concluidos: concluidos.total,
+      tempoMedioHoras: concluidos.mediaHoras,
       porAtendente,
       porCategoria,
     };
@@ -63,7 +64,7 @@ export class RelatoriosDAO {
     const linhas = await consultar<{ total: number }>(
       `SELECT COUNT(*)::int AS total
          FROM ${TABELA}
-        WHERE criado_em BETWEEN $1 AND $2`,
+        WHERE criado_em BETWEEN >=$1 AND <$2`,
       [inicio, fim],
     );
 
@@ -83,9 +84,9 @@ export class RelatoriosDAO {
       media_horas: number | null;
     }>(
       `SELECT COUNT(*)::int AS total,
-              AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600) AS media_horas
+              COALESCE(AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600), 0) AS media_horas
          FROM ${TABELA}
-        WHERE concluido_em BETWEEN $1 AND $2`,
+        WHERE concluido_em BETWEEN >=$1 AND <$2`,
       [inicio, fim],
     );
 
@@ -109,9 +110,9 @@ export class RelatoriosDAO {
     }>(
       `SELECT agente_id,
               COUNT(*)::int AS total,
-              AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600) AS media_horas
+              COALESCE(AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600), 0) AS media_horas
          FROM ${TABELA}
-        WHERE concluido_em BETWEEN $1 AND $2
+        WHERE concluido_em BETWEEN >=$1 AND <$2
           AND agente_id IS NOT NULL
         GROUP BY agente_id`,
       [inicio, fim],
@@ -133,7 +134,7 @@ export class RelatoriosDAO {
     const linhas = await consultar<{ categoria: string; total: number }>(
       `SELECT categoria, COUNT(*)::int AS total
          FROM ${TABELA}
-        WHERE criado_em BETWEEN $1 AND $2
+        WHERE criado_em BETWEEN >=$1 AND <$2
         GROUP BY categoria`,
       [inicio, fim],
     );

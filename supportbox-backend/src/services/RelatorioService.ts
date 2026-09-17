@@ -42,6 +42,6 @@ export class RelatoriosService {
     // escolhido entra inteiro no relatorio.
     fim.setDate(fim.getDate() + 1);
 
-    return this.dao.gerarRelatorio(inicio, fim);
+    return this.dao.gerarRelatorioAtendimentos(inicio, fim);
   }
 }

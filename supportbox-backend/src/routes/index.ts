@@ -7,6 +7,7 @@
 import { AuthController } from "../controllers/AuthController";
 import { ChamadosController } from "../controllers/ChamadosController";
 import { ComentariosController } from "../controllers/ComentariosController";
+import { RelatoriosController } from "../controllers/RelatoriosController";
 import { TriagemController } from "../controllers/TriagemController";
 import type { Manipulador } from "../utils/http";
 
@@ -44,6 +45,7 @@ export function listarRotas(): Rota[] {
   const auth = new AuthController();
   const chamados = new ChamadosController();
   const comentarios = new ComentariosController();
+  const relatorios = new RelatoriosController();
   const triagem = new TriagemController();
 
   return [
@@ -64,6 +66,9 @@ export function listarRotas(): Rota[] {
     rota("POST", "/api/chamados/:id/reabrir", chamados.reabrir),
     rota("PATCH", "/api/chamados/:id/atribuir", chamados.reatribuir),
     rota("PATCH", "/api/chamados/:id/prioridade", chamados.alterarPrioridade),
+
+    // Relatorios - so leitura, e so para agente (a regra esta no Service).
+    rota("GET", "/api/relatorios", relatorios.gerar),
 
     // Comentarios sao imutaveis (regra 5): nao ha rota de editar nem apagar.
     rota("POST", "/api/chamados/:idChamado/comentarios", comentarios.adicionar),

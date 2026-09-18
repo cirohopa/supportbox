@@ -1,0 +1,289 @@
+parte do Isaac: Componentes da Barra e Cartão
+
+Nesta etapa, criamos o componente MoldeBarraDados.tsx para exibir as barras de distribuição percentual e ajustamos o MoldeCartaoDados.tsx para aceitar valores formatados em texto (como "18h" ou "-").
+
+src/views/agente/MoldeBarraDados.tsx
+
+
+import React from "react";
+
+/**
+ * Representa uma fatia/segmento individual na barra de distribuição.
+ */
+export interface FatiaBarra {
+  rotulo: string;
+  valor: number;
+  corBg: string; // Exemplo: "bg-marca", "bg-destaque", "bg-emerald-500"
+}
+
+export interface PropsMoldeBarraDados {
+  titulo: string;
+  fatias: FatiaBarra[];
+}
+
+/**
+ * Componente que exibe uma barra horizontal dividida em fatias proporcionais
+ * e uma legenda explicativa abaixo.
+ */
+export default function MoldeBarraDados({
+  titulo,
+  fatias,
+}: PropsMoldeBarraDados) {
+  // Calcula a soma total dos valores das fatias
+  const total = fatias.reduce((acc, fatia) => acc + fatia.valor, 0);
+
+  return (
+    <div className="bg-fundoCard p-4 rounded-lg border border-borda shadow-sm flex flex-col gap-3">
+      <h3 className="text-sm font-semibold text-tinta">{titulo}</h3>
+
+      {/* Barra de Distribuição */}
+      <div className="w-full h-4 bg-fundo rounded-full overflow-hidden flex">
+        {total === 0 ? (
+          /* Estado vazio quando total for zero */
+          <div className="w-full h-full bg-borda opacity-50" title="Sem dados" />
+        ) : (
+          /* Renderiza as fatias proporcionais */
+          fatias.map((fatia, index) => {
+            if (fatia.valor <= 0) return null;
+            const porcentagem = (fatia.valor / total) * 100;
+
+            return (
+              <div
+                key={index}
+                className={`h-full ${fatia.corBg} transition-all duration-300`}
+                style={{ width: `${porcentagem}%` }}
+                title={`${fatia.rotulo}: ${fatia.valor} (${porcentagem.toFixed(1)}%)`}
+              />
+            );
+          })
+        )}
+      </div>
+
+      {/* Legenda dos Dados */}
+      <div className="flex flex-wrap items-center gap-4 text-xs text-tintaFraca">
+        {fatias.map((fatia, index) => (
+          <div key={index} className="flex items-center gap-1.5">
+            <span className={`w-3 h-3 rounded-full ${fatia.corBg}`} />
+            <span>
+              {fatia.rotulo}: <strong className="text-tinta">{fatia.valor}</strong>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+------------------------------------------------------------------------
+A parte de atualizar, src/views/agente/MoldeCartaoDados.tsx
+
+Altere o tipo da propriedade valor no MoldeCartaoDados.tsx para aceitar string | number
+
+import React from "react";
+
+export interface PropsMoldeCartaoDados {
+  titulo: string;
+  valor: string | number; // Atualizado de number para aceitar textos como "18h" ou "-"
+  subtitulo?: string;
+  icone?: React.ReactNode;
+}
+
+/**
+ * Cartão de métrica simples para exibição de números ou textos destaques.
+ */
+export default function MoldeCartaoDados({
+  titulo,
+  valor,
+  subtitulo,
+  icone,
+}: PropsMoldeCartaoDados) {
+  return (
+    <div className="bg-fundoCard p-4 rounded-lg border border-borda shadow-sm flex items-center justify-between">
+      <div className="flex flex-col gap-1">
+        <span className="text-xs font-medium text-tintaFraca uppercase tracking-wider">
+          {titulo}
+        </span>
+        <span className="text-2xl font-bold text-tinta">{valor}</span>
+        {subtitulo && (
+          <span className="text-xs text-tintaFraca">{subtitulo}</span>
+        )}
+      </div>
+      {icone && <div className="text-tintaFraca">{icone}</div>}
+    </div>
+  );
+}
+
+*Parte da Renata*: Cálculos e Montagem da Tela
+
+Nesta etapa, implementamos o estado de carregamento e os cálculos em memória na página src/app/agente/dados/page.tsx para distribuir os chamados por prioridade, situação e calcular o tempo médio de atendimento.
+------------------------------------------------------------------------------------------------------------
+Atualizar src/app/agente/dados/page.tsx
+
+"use client";
+
+import React, { useEffect, useState } from "react";
+import MoldeCartaoDados from "@/views/agente/MoldeCartaoDados";
+import MoldeBarraDados, { FatiaBarra } from "@/views/agente/MoldeBarraDados";
+
+// Interface para representação do Chamado vindo da API
+interface Chamado {
+  id: string;
+  tipo: string; // Ex: 'requisicao', 'solicitacao', 'incidente'
+  prioridade: string; // Ex: 'baixa', 'media', 'alta'
+  status: string; // Ex: 'aberto', 'em_andamento', 'concluido'
+  agenteId?: string | null;
+  criadoEm: string;
+  concluidoEm?: string | null;
+}
+
+export default function PaginaPainelDados() {
+  const [chamados, setChamados] = useState<Chamado[]>([]);
+  const [carregando, setCarregando] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function carregarDados() {
+      try {
+        setCarregando(true);
+        // Exemplo de busca da API (ajuste a URL se necessário)
+        const resposta = await fetch("/api/chamados");
+        if (resposta.ok) {
+          const dados = await resposta.json();
+          setChamados(dados);
+        }
+      } catch (erro) {
+        console.error("Erro ao carregar chamados para o painel de dados:", erro);
+      } finally {
+        setCarregando(false);
+      }
+    }
+
+    carregarDados();
+  }, []);
+
+  // -------------------------------------------------------------
+  // CÁLCULOS DOS CARTÕES EXISTENTES
+  // -------------------------------------------------------------
+  const totalRequisicoes = chamados.filter(
+    (c) => c.tipo === "requisicao" || c.tipo === "solicitacao"
+  ).length;
+
+  const totalIncidentes = chamados.filter(
+    (c) => c.tipo === "incidente"
+  ).length;
+
+  const totalSemAgente = chamados.filter((c) => !c.agenteId).length;
+
+  // -------------------------------------------------------------
+  // 1. CONTAGEM POR PRIORIDADE
+  // -------------------------------------------------------------
+  const prioridadeBaixa = chamados.filter((c) => c.prioridade === "baixa").length;
+  const prioridadeMedia = chamados.filter((c) => c.prioridade === "media").length;
+  const prioridadeAlta = chamados.filter((c) => c.prioridade === "alta").length;
+
+  const fatiasPrioridade: FatiaBarra[] = [
+    { rotulo: "Baixa", valor: prioridadeBaixa, corBg: "bg-emerald-500" },
+    { rotulo: "Média", valor: prioridadeMedia, corBg: "bg-destaque" },
+    { rotulo: "Alta", valor: prioridadeAlta, corBg: "bg-red-500" },
+  ];
+
+  // -------------------------------------------------------------
+  // 2. CONTAGEM POR SITUAÇÃO (STATUS)
+  // -------------------------------------------------------------
+  const statusAberto = chamados.filter((c) => c.status === "aberto").length;
+  const statusEmAndamento = chamados.filter((c) => c.status === "em_andamento").length;
+  const statusConcluido = chamados.filter((c) => c.status === "concluido").length;
+
+  const fatiasStatus: FatiaBarra[] = [
+    { rotulo: "Aberto", valor: statusAberto, corBg: "bg-marca" },
+    { rotulo: "Em Andamento", valor: statusEmAndamento, corBg: "bg-destaque" },
+    { rotulo: "Concluído", valor: statusConcluido, corBg: "bg-emerald-500" },
+  ];
+
+  // -------------------------------------------------------------
+  // 3. TEMPO MÉDIO DE ATENDIMENTO
+  // -------------------------------------------------------------
+  const chamadosConcluidos = chamados.filter(
+    (c) => c.status === "concluido" && c.concluidoEm
+  );
+
+  let tempoMedioTexto = "-";
+
+  if (chamadosConcluidos.length > 0) {
+    const somaHoras = chamadosConcluidos.reduce((acc, c) => {
+      const inicio = new Date(c.criadoEm).getTime();
+      const fim = new Date(c.concluidoEm!).getTime();
+      const diferencaHoras = (fim - inicio) / (1000 * 60 * 60);
+      return acc + (diferencaHoras > 0 ? diferencaHoras : 0);
+    }, 0);
+
+    const media = Math.round(somaHoras / chamadosConcluidos.length);
+    tempoMedioTexto = `${media}h`;
+  }
+
+  // Visualização de carregamento
+  if (carregando) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[300px]">
+        <p className="text-sm text-tintaFraca animate-pulse">
+          Carregando painel de dados...
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 flex flex-col gap-6">
+      <h1 className="text-xl font-bold text-tinta">Painel de Dados</h1>
+
+      {/* Grid com os 4 Cartões de Métricas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MoldeCartaoDados titulo="Requisições" valor={totalRequisicoes} />
+        <MoldeCartaoDados titulo="Incidentes" valor={totalIncidentes} />
+        <MoldeCartaoDados titulo="Sem Agente" valor={totalSemAgente} />
+        <MoldeCartaoDados titulo="Tempo Médio" valor={tempoMedioTexto} />
+      </div>
+
+      {/* Distribuições Visuais em Barras */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <MoldeBarraDados
+          titulo="Distribuição por Prioridade"
+          fatias={fatiasPrioridade}
+        />
+        <MoldeBarraDados
+          titulo="Distribuição por Situação"
+          fatias={fatiasStatus}
+        />
+      </div>
+    </div>
+  );
+}
+
+Esses são os códigos!
+
+ ISAAC — Construção do Componente e Flexibilização VisualFoquei na criação de componentes reutilizáveis e no ajuste das propriedades de interface (props) para suportar os novos tipos de dados.Criação da Barra de Distribuição (MoldeBarraDados.tsx):Conceito: Em vez de usar bibliotecas externas de gráficos, criei uma barra horizontal simples e leve usando apenas HTML e utilitários do Tailwind CSS (<div>).Lógica Proporcional: O componente recebe o título e uma lista de fatias contendo o valor e a cor. Ele calcula a soma total dos dados e obtém a porcentagem de cada fatia ($\frac{\text{valor}}{\text{total}} \times 100$). Esse valor percentual é aplicado na propriedade CSS de largura (width: X%), renderizando a barra proporcionalmente.Tratamento de Estado Vazio: Se a soma de todos os valores for zero, o código trata essa exceção renderizando uma barra cinza e neutra, evitando erros numéricos como divisão por zero.Legenda Dinâmica: Abaixo da barra, é montada automaticamente uma legenda com indicadores coloridos (dots), exibindo o nome de cada categoria e seu respetivo valor numérico.Flexibilização do Cartão de Métricas (MoldeCartaoDados.tsx):Ajuste de Tipagem: O cartão original aceitava apenas números na propriedade valor (valor: number). Alterei a tipagem no TypeScript para aceitar também texto (valor: string | number).Objetivo: Essa mudança permitiu que a tela exibisse valores formatados como textos em destaque (por exemplo, "18h" para o tempo médio ou "-" quando não houver dados), sem quebrar os cartões antigos que continuam recebendo apenas números.
+
+
+RENATA — Regras de Negócio, Processamento em Memória e Estado
+Foquei na captura dos dados brutos, no processamento dos cálculos em memória e no gerenciamento do estado da tela.
+
+Cálculos de Distribuição em Memória (page.tsx):
+
+Sem Novas Requisições: Aproveitei a lista de chamados que a tela já baixava da API e utilizei métodos nativos do JavaScript (.filter()) para contar as ocorrências de cada indicador diretamente no navegador.
+
+Contagem por Prioridade: Mapeei os valores exatos vindos do banco de dados/backend (baixa, media, alta) para preencher o gráfico de prioridades.
+
+Contagem por Situação: Mapeei os status reais da aplicação (aberto, em_andamento, concluido) para alimentar a barra de situação dos chamados.
+
+Cálculo do Tempo Médio de Atendimento:
+
+Filtragem: Selecionei exclusivamente os chamados que estavam com status concluido e que possuíam o campo de data concluidoEm preenchido.
+
+Diferença de Horas: Para cada chamado concluído, converti as strings de data (criadoEm e concluidoEm) em milissegundos (getTime()), calculei a diferença e converti o resultado em horas.
+
+Média e Formatação: Somiei todas as horas com .reduce(), dividi pela quantidade de chamados concluídos e usei Math.round() para arredondar a média final. Se houver chamados concluídos, o resultado é exibido no formato "Xh"; se não houver nenhum, a tela exibe o traço "-".
+
+Tratamento da API e Experiência do Usuário (UX):
+
+Mapeamento de Chaves: Mantive o cuidado de fazer as comparações considerando as chaves exatas e sem acentos enviadas pelo backend (ex: solicitacao, em_andamento), garantindo que o filtro funcione independente do rótulo formatado que aparece na tela.
+
+Estado de Carregamento (carregando): Adicionei uma variável de estado booleana (true/false) durante a chamada à API. Enquanto os dados são buscados, a tela exibe uma mensagem de carregamento suave (skeleton/pulse), impedindo que os cartões e barras fiquem piscando com o valor "0" antes do término da requisição.

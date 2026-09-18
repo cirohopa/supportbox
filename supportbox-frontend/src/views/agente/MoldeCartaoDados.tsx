@@ -1,8 +1,8 @@
 interface PropsMoldeCartaoDados {
   /** Texto pequeno no topo do cartão, em maiúsculas. */
   rotulo: string;
-  /** O número exibido em destaque. */
-  valor: number;
+  /** O valor exibido em destaque. Aceita texto (ex.: "18h", "-") além de números. */
+  valor: string | number;
 }
 
 export function MoldeCartaoDados({ rotulo, valor }: PropsMoldeCartaoDados) {

@@ -5,27 +5,10 @@
 // Todos os metodos sao assincronos, porque falar com o banco leva tempo.
 
 import { consultar } from "../db";
+import {AtendimentoPorAgente, DadosRelatorio, TotalPorCategoria} from "../dominio";
 
 const TABELA = "chamados";
 
-export type RelatorioPorAtendente = {
-  agenteId: string;
-  totalConcluidos: number;
-  mediaHoras: number | null;
-};
-
-export type RelatorioPorCategoria = {
-  categoria: string;
-  total: number;
-};
-
-export type RelatorioAtendimentos = {
-  totalAbertos: number;
-  totalConcluidos: number;
-  mediaHorasConclusao: number | null;
-  porAtendente: RelatorioPorAtendente[];
-  porCategoria: RelatorioPorCategoria[];
-};
 
 export class RelatoriosDAO {
   // Monta o relatorio inteiro do periodo [dataInicio, dataFim]. Cada bloco
@@ -35,7 +18,7 @@ export class RelatoriosDAO {
   async gerarRelatorioAtendimentos(
     dataInicio: Date,
     dataFim: Date,
-  ): Promise<RelatorioAtendimentos> {
+  ): Promise<DadosRelatorio> {
     const [totalAbertos, concluidos, porAtendente, porCategoria] =
       await Promise.all([
         this.contarAbertos(dataInicio, dataFim),
@@ -45,9 +28,9 @@ export class RelatoriosDAO {
       ]);
 
     return {
-      totalAbertos,
+      totalCriados: totalAbertos,
       totalConcluidos: concluidos.total,
-      mediaHorasConclusao: concluidos.mediaHoras,
+      tempoMedioHoras: concluidos.mediaHoras,
       porAtendente,
       porCategoria,
     };
@@ -63,7 +46,7 @@ export class RelatoriosDAO {
     const linhas = await consultar<{ total: number }>(
       `SELECT COUNT(*)::int AS total
          FROM ${TABELA}
-        WHERE criado_em BETWEEN $1 AND $2`,
+        WHERE criado_em >=$1 AND criado_em <$2`,
       [inicio, fim],
     );
 
@@ -77,15 +60,15 @@ export class RelatoriosDAO {
   private async contarConcluidosComMedia(
     inicio: Date,
     fim: Date,
-  ): Promise<{ total: number; mediaHoras: number | null }> {
+  ): Promise<{ total: number; mediaHoras: number }> {
     const linhas = await consultar<{
       total: number;
-      media_horas: number | null;
+      media_horas: number;
     }>(
       `SELECT COUNT(*)::int AS total,
-              AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600) AS media_horas
+              COALESCE(AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600), 0) AS media_horas
          FROM ${TABELA}
-        WHERE concluido_em BETWEEN $1 AND $2`,
+        WHERE concluido_em >=$1 AND concluido_em <$2`,
       [inicio, fim],
     );
 
@@ -101,17 +84,17 @@ export class RelatoriosDAO {
   private async agruparPorAtendente(
     inicio: Date,
     fim: Date,
-  ): Promise<RelatorioPorAtendente[]> {
+  ): Promise<AtendimentoPorAgente[]> {
     const linhas = await consultar<{
       agente_id: string;
       total: number;
-      media_horas: number | null;
+      media_horas: number;
     }>(
       `SELECT agente_id,
               COUNT(*)::int AS total,
-              AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600) AS media_horas
+              COALESCE(AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600), 0) AS media_horas
          FROM ${TABELA}
-        WHERE concluido_em BETWEEN $1 AND $2
+        WHERE concluido_em >=$1 AND concluido_em <$2
           AND agente_id IS NOT NULL
         GROUP BY agente_id`,
       [inicio, fim],
@@ -119,8 +102,8 @@ export class RelatoriosDAO {
 
     return linhas.map((linha) => ({
       agenteId: linha.agente_id,
-      totalConcluidos: linha.total,
-      mediaHoras: linha.media_horas,
+      concluidos: linha.total,
+      tempoMedioHoras: linha.media_horas,
     }));
   }
 
@@ -129,11 +112,11 @@ export class RelatoriosDAO {
   private async agruparPorCategoria(
     inicio: Date,
     fim: Date,
-  ): Promise<RelatorioPorCategoria[]> {
+  ): Promise<TotalPorCategoria[]> {
     const linhas = await consultar<{ categoria: string; total: number }>(
       `SELECT categoria, COUNT(*)::int AS total
          FROM ${TABELA}
-        WHERE criado_em BETWEEN $1 AND $2
+        WHERE criado_em >=$1 AND criado_em <$2
         GROUP BY categoria`,
       [inicio, fim],
     );

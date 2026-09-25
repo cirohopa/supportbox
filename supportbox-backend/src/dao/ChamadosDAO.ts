@@ -122,4 +122,13 @@ export class ChamadosDAO {
     const sequencial = String(linhas[0].total + 1).padStart(3, "0");
     return `CH-${ano}-${sequencial}`;
   }
+
+  // Igual ao buscarPorId, mas procura pelo protocolo (CH-AAAA-NNN).
+  async buscarPorProtocolo(protocolo: string): Promise<Chamado | null> {
+      const linhas = await consultar(
+        `SELECT * FROM ${TABELA} WHERE protocolo = $1`,
+        [protocolo],
+      );
+    return linhas.length > 0 ? paraChamado(linhas[0]) : null;
+  }
 }

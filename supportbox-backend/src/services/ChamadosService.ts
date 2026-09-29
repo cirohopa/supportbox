@@ -237,4 +237,21 @@ export class ChamadosService {
     }
     return chamado;
   }
+
+    // Busca pelo protocolo (ex.: "ch-2026-008" vira "CH-2026-008") e aplica
+// a mesma regra de acesso do detalhar.
+  async buscarPorProtocolo(protocolo: unknown, ator: Ator): Promise<Chamado> {
+    
+    const codigo = comoTexto(protocolo).toUpperCase();
+    const chamado = await this.dao.buscarPorProtocolo(codigo);
+    if (!chamado) {
+      throw new ErroNaoEncontrado("Chamado nao encontrado.");
+    }
+    
+    if (ator.papel === "solicitante" && chamado.solicitanteId !== ator.id) {
+      throw new ErroAcessoNegado("Voce nao tem acesso a este chamado.");
+    }
+
+  return chamado;
+}
 }

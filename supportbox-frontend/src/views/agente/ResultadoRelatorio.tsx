@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { RelatorioApi } from '@/lib/api';
-import MoldeCartaoDados from '@/views/agente/MoldeCartaoDados';
+import { MoldeCartaoDados } from '@/views/agente/MoldeCartaoDados';
 
 export interface PropsResultadoRelatorio {
   dados: RelatorioApi;
@@ -35,9 +35,9 @@ export default function ResultadoRelatorio({ dados }: PropsResultadoRelatorio) {
     <div className="flex flex-col gap-6 animate-fadeIn">
       {/* 1. TOTAIS: Cartões de Resumo Geral */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <MoldeCartaoDados titulo="Criados" valor={dados.totalCriados} />
-        <MoldeCartaoDados titulo="Concluídos" valor={dados.totalConcluidos} />
-        <MoldeCartaoDados titulo="Tempo médio" valor={tempoMedioGeral} />
+        <MoldeCartaoDados rotulo="Criados" valor={dados.totalCriados} />
+        <MoldeCartaoDados rotulo="Concluídos" valor={dados.totalConcluidos} />
+        <MoldeCartaoDados rotulo="Tempo médio" valor={tempoMedioGeral} />
       </div>
 
       {/* 2. POR ATENDENTE: Tabela de Desempenho */}
@@ -105,7 +105,7 @@ export default function ResultadoRelatorio({ dados }: PropsResultadoRelatorio) {
             {dados.porCategoria.map((item, index) => (
               <MoldeCartaoDados
                 key={item.categoria || index}
-                titulo={formatarCategoria(item.categoria)}
+                rotulo={formatarCategoria(item.categoria)}
                 valor={item.total}
               />
             ))}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Botao } from "@/views/compartilhado/Botao";
 import { CampoTexto } from "@/views/compartilhado/CampoTexto";
+import ResultadoRelatorio from "@/views/agente/ResultadoRelatorio";
 import { lerSessao } from "@/lib/sessao";
 import { obterRelatorio, type RelatorioApi } from "@/lib/api";
 
@@ -77,11 +78,7 @@ export default function PaginaRelatorios() {
         </Botao>
       </div>
 
-      {/*
-        A Renata ainda vai entregar o ResultadoRelatorio. Enquanto isso,
-        o JSON cru serve para conferir que os dados chegaram certos.
-      */}
-      {relatorio && <pre>{JSON.stringify(relatorio, null, 2)}</pre>}
+      {relatorio && <ResultadoRelatorio dados={relatorio} />}
     </div>
   );
 }

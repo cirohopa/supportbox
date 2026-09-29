@@ -3,9 +3,9 @@
  *
  * Aparece à esquerda em todas as rotas dentro de /agente. Mostra
  * a identidade do sistema, os atalhos de navegação, a identificação
- * do usuário entrado e o botão de sair. Por enquanto a navegação
- * tem só o item Tickets, mas a estrutura já está pronta para receber
- * outros atalhos quando o sistema crescer.
+ * do usuário entrado e o botão de sair. A navegação tem três
+ * atalhos: Tickets, Painel de Dados e Relatórios. A estrutura já
+ * está pronta para receber outros atalhos quando o sistema crescer.
  *
  * O componente não sabe como o sistema desliga a sessão. Ele só
  * dispara aoSairClicado e deixa a decisão para quem o utiliza.
@@ -14,7 +14,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartColumn, Ticket, LogOut } from "lucide-react";
+import { ChartColumn, FileText, Ticket, LogOut } from "lucide-react";
 
 interface PropsMenuLateralAgente {
   /** Nome do usuário entrado, exibido no rodapé da barra. */
@@ -33,6 +33,7 @@ export function MenuLateralAgente({
   const caminho = usePathname();
   const emTickets = caminho === "/agente";
   const emDados = caminho === "/agente/dados";
+  const emRelatorios = caminho === "/agente/relatorios";
 
   return (
     <aside className="w-60 bg-papel border-r border-linha flex flex-col h-screen">
@@ -74,6 +75,18 @@ export function MenuLateralAgente({
         >
           <ChartColumn className="w-4 h-4" />
           Painel de Dados
+        </Link>
+        <Link
+          href="/agente/relatorios"
+          className={[
+            "flex items-center gap-2 px-3 py-2 rounded-md text-sm",
+            emRelatorios
+              ? "bg-marca-fraca text-marca-forte font-medium"
+              : "text-tintaFraca hover:bg-fundo",
+          ].join(" ")}
+        >
+          <FileText className="w-4 h-4" />
+          Relatórios
         </Link>
       </nav>
 

@@ -70,6 +70,28 @@ export interface TriagemApi {
   prioridade: "baixa" | "media" | "alta";
 }
 
+/** Quanto um atendente concluiu no periodo do relatorio. */
+export interface AtendimentoApi {
+  agenteId: string;
+  concluidos: number;
+  tempoMedioHoras: number;
+}
+
+/** Quanto uma categoria somou no periodo do relatorio. */
+export interface CategoriaApi {
+  categoria: string;
+  total: number;
+}
+
+/** O que o backend devolve para o relatorio de um periodo. */
+export interface RelatorioApi {
+  totalCriados: number;
+  totalConcluidos: number;
+  tempoMedioHoras: number;
+  porAtendente: AtendimentoApi[];
+  porCategoria: CategoriaApi[];
+}
+
 /**
  * Faz uma requisicao a API e devolve o JSON ja parseado. Se a resposta
  * vier com erro (status >= 400), lanca um `Error` com a mensagem que o
@@ -183,4 +205,15 @@ export function adicionarComentario(
     sessao,
     { texto },
   );
+}
+
+// --- Relatorios ---------------------------------------------------------
+
+/** Busca o relatorio de atendimento de um periodo (datas no formato AAAA-MM-DD). */
+export function obterRelatorio(
+  sessao: Sessao,
+  de: string,
+  ate: string,
+): Promise<RelatorioApi> {
+  return requisitar("GET", `/api/relatorios?de=${de}&ate=${ate}`, sessao);
 }

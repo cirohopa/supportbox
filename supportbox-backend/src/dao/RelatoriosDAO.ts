@@ -55,8 +55,8 @@ export class RelatoriosDAO {
 
   // "Concluidos no periodo" conta pela data de CONCLUSAO. A media de horas
   // usa so essas linhas, como pedido: "so dos concluidos". AVG de uma
-  // coluna double precision ja volta como numero (diferente do bigint do
-  // COUNT), entao nao precisa de cast.
+  // coluna double precision não volta como numero (semelhante ao bigint do
+  // COUNT), entao precisa de cast (::float).
   private async contarConcluidosComMedia(
     inicio: Date,
     fim: Date,
@@ -66,7 +66,7 @@ export class RelatoriosDAO {
       media_horas: number;
     }>(
       `SELECT COUNT(*)::int AS total,
-              COALESCE(AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600), 0) AS media_horas
+              COALESCE(AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600), 0)::float AS media_horas
          FROM ${TABELA}
         WHERE concluido_em >=$1 AND concluido_em <$2`,
       [inicio, fim],
@@ -92,7 +92,7 @@ export class RelatoriosDAO {
     }>(
       `SELECT agente_id,
               COUNT(*)::int AS total,
-              COALESCE(AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600), 0) AS media_horas
+              COALESCE(AVG(EXTRACT(EPOCH FROM (concluido_em - criado_em)) / 3600), 0)::float AS media_horas
          FROM ${TABELA}
         WHERE concluido_em >=$1 AND concluido_em <$2
           AND agente_id IS NOT NULL

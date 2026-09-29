@@ -61,7 +61,13 @@ export class TelegramController {
 
       for (const mensagem of mensagens) {
         proximo = mensagem.updateId + 1;
-        await this.tratar(mensagem);
+        // Uma mensagem que deu erro (ex.: a internet caiu na hora de
+        // responder no chat) nao pode derrubar o laco: registra e segue.
+        try {
+          await this.tratar(mensagem);
+        } catch (erro) {
+          console.error("[telegram] falha ao tratar mensagem:", erro);
+        }
       }
     }
   };

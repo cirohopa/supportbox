@@ -1,25 +1,49 @@
-// Controller de autenticacao - RESERVA DE LUGAR.
-//
-// Os tres endpoints existem para marcar onde o login vai entrar, mas ainda
-// respondem 501: nao existe AuthService nem tabela de usuarios. Enquanto
-// isso, a identidade vem dos cabecalhos X-Usuario-* (ver utils/ator.ts).
+// Camada HTTP da autenticacao: entrar, sair e "quem sou eu".
 
 import type { IncomingMessage, ServerResponse } from "http";
-import { responder } from "../utils/http";
+import { responder, responderErro } from "../utils/http";
+import { lerCorpoJson } from "../utils/corpo";
+import { extrairAtor } from "../utils/ator";
+import { AuthService } from "../services/AuthService";
 
 export class AuthController {
-  // POST /api/auth/login  - recebe email + senha, devolve token
-  login = (_req: IncomingMessage, res: ServerResponse) => {
-    responder(res, 501, { erro: "Service pendente: login." });
+  private service = new AuthService();
+
+  // POST /api/auth/login
+  // Body: { email, senha } -> 200 com { token, usuario }.
+  login = async (req: IncomingMessage, res: ServerResponse) => {
+    const corpo = await lerCorpoJson<{ email?: unknown; senha?: unknown }>(req);
+    if (!corpo.ok) return responder(res, 400, { erro: corpo.erro });
+
+    try {
+      const resultado = await this.service.entrar(
+        corpo.dados.email,
+        corpo.dados.senha,
+      );
+      responder(res, 200, resultado);
+    } catch (erro) {
+      responderErro(res, erro);
+    }
   };
 
-  // POST /api/auth/logout - invalida o token no servidor
+  // POST /api/auth/logout -> 204.
+  // O token nao fica guardado no servidor: sair e o frontend apaga-lo.
   logout = (_req: IncomingMessage, res: ServerResponse) => {
-    responder(res, 501, { erro: "Service pendente: logout." });
+    res.writeHead(204);
+    res.end();
   };
 
-  // GET /api/auth/me      - devolve os dados de quem esta autenticado
-  me = (_req: IncomingMessage, res: ServerResponse) => {
-    responder(res, 501, { erro: "Service pendente: me." });
+  // GET /api/auth/me -> 200 com { email, nome, papel }.
+  me = async (req: IncomingMessage, res: ServerResponse) => {
+    const ator = extrairAtor(req);
+    if (!ator) {
+      return responder(res, 401, { erro: "Sessão inválida ou expirada." });
+    }
+
+    try {
+      responder(res, 200, await this.service.quemSou(ator));
+    } catch (erro) {
+      responderErro(res, erro);
+    }
   };
 }

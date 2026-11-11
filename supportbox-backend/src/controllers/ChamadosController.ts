@@ -21,7 +21,7 @@ export class ChamadosController {
   // POST /api/chamados -> 201 com o chamado criado
   abrir = async (req: IncomingMessage, res: ServerResponse) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     const corpo = await lerCorpoJson<DadosAbrirChamado>(req);
     if (!corpo.ok) return responder(res, 400, { erro: corpo.erro });
@@ -37,7 +37,7 @@ export class ChamadosController {
   // GET /api/chamados?status=... -> 200 com { itens: [...] }
   listar = async (req: IncomingMessage, res: ServerResponse, ctx: Contexto) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     try {
       const itens = await this.service.listar(ator, { status: ctx.busca.status });
@@ -54,7 +54,7 @@ export class ChamadosController {
     ctx: Contexto,
   ) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     try {
       const chamado = await this.service.detalhar(ctx.parametros.id, ator);
@@ -67,7 +67,7 @@ export class ChamadosController {
   // POST /api/chamados/:id/assumir -> 200 com o chamado atualizado
   assumir = async (req: IncomingMessage, res: ServerResponse, ctx: Contexto) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     try {
       const chamado = await this.service.assumir(ctx.parametros.id, ator);
@@ -84,7 +84,7 @@ export class ChamadosController {
     ctx: Contexto,
   ) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     try {
       const chamado = await this.service.concluir(ctx.parametros.id, ator);
@@ -97,7 +97,7 @@ export class ChamadosController {
   // POST /api/chamados/:id/reabrir -> 200 (solicitante, ate 7 dias)
   reabrir = async (req: IncomingMessage, res: ServerResponse, ctx: Contexto) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     try {
       const chamado = await this.service.reabrir(ctx.parametros.id, ator);
@@ -114,7 +114,7 @@ export class ChamadosController {
     ctx: Contexto,
   ) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     const corpo = await lerCorpoJson<{ agenteId?: unknown }>(req);
     if (!corpo.ok) return responder(res, 400, { erro: corpo.erro });
@@ -138,7 +138,7 @@ export class ChamadosController {
     ctx: Contexto,
   ) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     const corpo = await lerCorpoJson<{ prioridade?: unknown }>(req);
     if (!corpo.ok) return responder(res, 400, { erro: corpo.erro });

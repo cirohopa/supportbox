@@ -6,12 +6,15 @@
 // Quando uma regra e violada, lanca um erro de dominio (erros.ts) que a
 // camada HTTP traduz no status certo.
 //
-// PENDENTE (parte da regra 5): comentarios automaticos do autor "Sistema"
-// a cada mudanca de status, atribuicao ou prioridade.
+// Toda mudanca de status, responsavel ou prioridade tambem e registrada no
+// historico, com o autor "Sistema" (regra 5). Como isso acontece aqui, vale
+// para o site e para o Telegram.
 
 import type { Ator, Chamado, Prioridade } from "../dominio";
 import { ChamadosDAO } from "../dao/ChamadosDAO";
+import { ComentariosDAO } from "../dao/ComentariosDAO";
 import { ErroAcessoNegado, ErroNaoEncontrado, ErroValidacao } from "../erros";
+import { calcularPrazo } from "./prazos";
 
 export type DadosAbrirChamado = {
   titulo: string;
@@ -22,10 +25,8 @@ export type DadosAbrirChamado = {
   // vale "media". E `unknown` porque vem do corpo da requisicao e ainda nao
   // foi conferida - quem valida e este Service, no metodo `abrir`.
   //
-  // LIMITACAO: hoje confiamos que este valor veio da nossa triagem, do mesmo
-  // jeito que confiamos nos cabecalhos X-Usuario-*. Quando entrar
-  // autenticacao real, a triagem passa a ser chamada DENTRO do `abrir` e a
-  // brecha fecha.
+  // LIMITACAO: confiamos que este valor veio da nossa triagem. O `abrir` so
+  // confere se e um dos tres niveis validos.
   prioridade?: unknown;
 };
 
@@ -34,6 +35,13 @@ const CATEGORIAS_VALIDAS = ["hardware", "software", "acesso", "rede"];
 const TIPOS_VALIDOS = ["incidente", "solicitacao"];
 const PRIORIDADES_VALIDAS: Prioridade[] = ["baixa", "media", "alta"];
 const STATUS_VALIDOS = ["aberto", "em_andamento", "concluido"];
+
+// Como cada prioridade aparece escrita no historico.
+const ROTULOS_PRIORIDADE: Record<Prioridade, string> = {
+  baixa: "Baixa",
+  media: "Média",
+  alta: "Alta",
+};
 
 function comoTexto(valor: unknown): string {
   return typeof valor === "string" ? valor.trim() : "";
@@ -46,9 +54,12 @@ function exigirAgente(ator: Ator): void {
 }
 
 export class ChamadosService {
-  // A DAO vem por parametro, com um padrao, para dar para trocar por uma
-  // versao falsa em teste sem precisar de banco.
-  constructor(private dao: ChamadosDAO = new ChamadosDAO()) {}
+  // As DAOs vem por parametro, com um padrao, para dar para trocar por
+  // versoes falsas em teste sem precisar de banco.
+  constructor(
+    private dao: ChamadosDAO = new ChamadosDAO(),
+    private comentarios: ComentariosDAO = new ComentariosDAO(),
+  ) {}
 
   // Regra 4: validacao obrigatoria na abertura.
   async abrir(ator: Ator, dados: DadosAbrirChamado): Promise<Chamado> {
@@ -92,6 +103,7 @@ export class ChamadosService {
       tipo,
       solicitanteId: ator.id,
       prioridade,
+      prazoEm: calcularPrazo(new Date(), prioridade), // regra 6
     });
   }
 
@@ -138,7 +150,13 @@ export class ChamadosService {
     }
     chamado.status = "em_andamento";
     chamado.agenteId = ator.id;
-    return this.dao.atualizar(chamado);
+    const atualizado = await this.dao.atualizar(chamado);
+
+    await this.registrarHistorico(
+      chamado.id,
+      `Chamado assumido por ${ator.id}. Situação: Aberto → Em Andamento.`,
+    );
+    return atualizado;
   }
 
   // Regra 2: so o agente ATRIBUIDO conclui. A data gravada aqui e a base do
@@ -156,7 +174,10 @@ export class ChamadosService {
     }
     chamado.status = "concluido";
     chamado.concluidoEm = new Date();
-    return this.dao.atualizar(chamado);
+    const atualizado = await this.dao.atualizar(chamado);
+
+    await this.registrarHistorico(chamado.id, `Chamado concluído por ${ator.id}.`);
+    return atualizado;
   }
 
   // Regra 7: o solicitante que abriu pode reabrir em ate 7 dias corridos.
@@ -182,15 +203,22 @@ export class ChamadosService {
     chamado.status = "em_andamento";
     // Zera a data: um chamado que voltou a ser atendido nao tem conclusao.
     chamado.concluidoEm = null;
-    return this.dao.atualizar(chamado);
+    // Regra 6: o atendimento recomeca, entao o prazo conta a partir de agora.
+    chamado.prazoEm = calcularPrazo(new Date(), chamado.prioridade);
+    const atualizado = await this.dao.atualizar(chamado);
+
+    await this.registrarHistorico(
+      chamado.id,
+      `Chamado reaberto por ${ator.id}. Situação: Concluído → Em Andamento.`,
+    );
+    return atualizado;
   }
 
   // So vale para chamado "em_andamento" - ou seja, que ja tem dono. Isso
   // preserva a maquina de estados: um chamado "aberto" ganha agente
   // ASSUMINDO, e um "concluido" nao troca de dono.
   //
-  // Nao ha como conferir se o id recebido e mesmo de um agente: falta a
-  // tabela de usuarios, que chega com a autenticacao.
+  // Ainda nao conferimos se o id recebido e de um agente cadastrado.
   async reatribuir(
     idChamado: string,
     ator: Ator,
@@ -207,8 +235,17 @@ export class ChamadosService {
     if (novo.length === 0) {
       throw new ErroValidacao("Informe o agente que recebera o chamado.");
     }
+    const anterior = chamado.agenteId;
     chamado.agenteId = novo;
-    return this.dao.atualizar(chamado);
+    const atualizado = await this.dao.atualizar(chamado);
+
+    if (anterior !== novo) {
+      await this.registrarHistorico(
+        chamado.id,
+        `Responsável alterado de ${anterior} para ${novo} por ${ator.id}.`,
+      );
+    }
+    return atualizado;
   }
 
   // Regra 3: solicitante nao mexe em prioridade.
@@ -226,8 +263,28 @@ export class ChamadosService {
         `Prioridade invalida. Use uma de: ${PRIORIDADES_VALIDAS.join(", ")}.`,
       );
     }
+    const anterior = chamado.prioridade;
     chamado.prioridade = prioridadeValida;
-    return this.dao.atualizar(chamado);
+    // Regra 6: o prazo acompanha a prioridade, contado desde a abertura.
+    chamado.prazoEm = calcularPrazo(chamado.criadoEm, prioridadeValida);
+    const atualizado = await this.dao.atualizar(chamado);
+
+    if (anterior !== prioridadeValida) {
+      await this.registrarHistorico(
+        chamado.id,
+        `Prioridade alterada de ${ROTULOS_PRIORIDADE[anterior]} para ` +
+          `${ROTULOS_PRIORIDADE[prioridadeValida]} por ${ator.id}.`,
+      );
+    }
+    return atualizado;
+  }
+
+  // Regra 5: grava a mudanca no historico, com o autor "Sistema".
+  private async registrarHistorico(
+    chamadoId: string,
+    texto: string,
+  ): Promise<void> {
+    await this.comentarios.criar({ chamadoId, autor: "Sistema", texto });
   }
 
   private async buscarOuFalhar(idChamado: string): Promise<Chamado> {

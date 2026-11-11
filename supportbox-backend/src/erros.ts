@@ -5,3 +5,4 @@
 export class ErroValidacao extends Error {}      // vira 400
 export class ErroNaoEncontrado extends Error {}  // vira 404
 export class ErroAcessoNegado extends Error {}   // vira 403
+export class ErroNaoAutenticado extends Error {} // vira 401

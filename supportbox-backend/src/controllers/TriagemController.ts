@@ -25,7 +25,7 @@ export class TriagemController {
   // o solicitante continua podendo abrir o chamado.
   analisar = async (req: IncomingMessage, res: ServerResponse) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     const corpo = await lerCorpoJson<Partial<RascunhoChamado>>(req);
     if (!corpo.ok) return responder(res, 400, { erro: corpo.erro });

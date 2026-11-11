@@ -19,7 +19,7 @@ export class RelatoriosController {
   // corpo para ler: GET so leva dados no endereco.
   gerar = async (req: IncomingMessage, res: ServerResponse, ctx: Contexto) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     try {
       const relatorio = await this.service.gerar(

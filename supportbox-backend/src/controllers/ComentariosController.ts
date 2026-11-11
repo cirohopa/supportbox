@@ -21,7 +21,7 @@ export class ComentariosController {
     ctx: Contexto,
   ) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     const corpo = await lerCorpoJson<{ texto?: unknown }>(req);
     if (!corpo.ok) return responder(res, 400, { erro: corpo.erro });
@@ -41,7 +41,7 @@ export class ComentariosController {
   // GET /api/chamados/:idChamado/comentarios -> 200 com { itens: [...] }
   listar = async (req: IncomingMessage, res: ServerResponse, ctx: Contexto) => {
     const ator = extrairAtor(req);
-    if (!ator) return responder(res, 401, { erro: "Nao autenticado." });
+    if (!ator) return responder(res, 401, { erro: "Sessão inválida ou expirada." });
 
     try {
       const itens = await this.service.listar(ctx.parametros.idChamado, ator);

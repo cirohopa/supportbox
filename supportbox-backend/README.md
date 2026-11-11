@@ -8,34 +8,45 @@ tres camadas:
   esta dividido em **Service** (regras de negocio / validacao) e **DAO**
   (persistencia e comunicacao com o banco).
 
-A camada **View** vive em outro projeto (`supportbox`, o frontend em
+A camada **View** vive em outro projeto (`supportbox-frontend`, em
 Next.js).
 
-> **Estado atual:** os endpoints de **chamados** e **comentarios** funcionam
-> de ponta a ponta — Controller -> Service -> DAO -> **PostgreSQL** rodando na
-> maquina de um integrante do grupo (veja `banco/COMO_RODAR.md`).
-> So **autenticacao** (`/api/auth/*`) ainda responde `501`: nao ha regras de
-> auth nem `AuthService` ainda. Enquanto a auth real nao chega, a identidade
-> de quem chama vem de cabecalhos temporarios (`X-Usuario-Id` e
-> `X-Usuario-Papel`) — veja "Como rodar". O **CORS** ja esta habilitado para
-> o frontend. Nao usamos framework (so o `http` nativo do Node) nem
-> biblioteca de validacao de schema.
+> **Estado atual:** chamados, comentarios, triagem por IA, relatorios e
+> **login** funcionam de ponta a ponta — Controller -> Service -> DAO ->
+> **PostgreSQL** rodando na maquina de um integrante do grupo (veja
+> `banco/COMO_RODAR.md`). O login e real: a senha fica guardada so como
+> resumo (scrypt) e cada pessoa recebe um token de sessao assinado. Toda
+> mudanca de status, responsavel ou prioridade fica registrada no
+> historico, e cada chamado tem um prazo de resolucao em dias uteis. O
+> backend tambem liga um **bot do Telegram**, por onde o agente comenta e
+> conclui chamados em linguagem natural. Nao usamos framework (so o `http`
+> nativo do Node). A biblioteca **Zod** e usada apenas para conferir as
+> respostas da IA.
 
 ## 1. Arquitetura
 
 ```
-Cliente HTTP  (View / frontend Next.js, outro projeto)
-      |
-      v
-  Controller            recebe HTTP, confere o formato, responde
+Cliente HTTP (frontend Next.js)        Bot do Telegram (src/telegram.ts)
+      |                                        |
+      v                                        v
+  Controller            recebe o pedido, identifica quem pede, responde
       |
       v
   Model
-  |- Service            regras de negocio / validacao   (chamados + comentarios)
-  |     |
+  |- Service            regras de negocio / validacao
+  |     |               (login, chamados, comentarios, relatorios, triagem)
   |     v
   '- DAO                persistencia (PostgreSQL, via biblioteca `pg`)
+
+  A IA (Google Gemini, src/ia.ts) e chamada por dois Services:
+  TriagemService (sugere passos e prioridade na abertura) e
+  AssistenteService (interpreta a mensagem do agente no Telegram).
+  Ela so interpreta texto: quem executa as acoes sao os Services.
 ```
+
+O Telegram entrou como **mais uma porta de entrada**: o `TelegramController`
+chama os mesmos Services que os Controllers HTTP, entao as regras de negocio
+nao foram reescritas.
 
 Por que separar Service de DAO dentro do Model:
 
@@ -47,8 +58,8 @@ Por que separar Service de DAO dentro do Model:
 Principios aplicados:
 
 - **SRP** (responsabilidade unica): cada Controller cuida de um unico
-  recurso (Auth, Chamados, Comentarios); Service e DAO tambem tem papeis
-  bem delimitados.
+  recurso (Auth, Chamados, Comentarios, Relatorios, Triagem); Service e DAO
+  tambem tem papeis bem delimitados.
 - **OCP** (aberto/fechado): novos endpoints entram como novos metodos,
   sem mexer nos existentes.
 
@@ -56,11 +67,13 @@ Principios aplicados:
 
 **Antes de tudo:** o banco precisa estar de pe. O passo a passo completo
 (instalar o PostgreSQL, criar as tabelas e liberar o acesso pela rede) esta
-em **[`banco/COMO_RODAR.md`](banco/COMO_RODAR.md)**.
+em **[`banco/COMO_RODAR.md`](banco/COMO_RODAR.md)**. Se o banco ja existia
+antes de novembro, rode tambem, uma vez, o `banco/migracao-novembro.sql`
+(cria a tabela `usuarios` e a coluna `prazo_em`).
 
 ```
 npm install
-cp .env.example .env    # e preencha a DATABASE_URL
+cp .env.example .env    # preencha DATABASE_URL, GEMINI_API_KEY e SESSAO_SEGREDO
 npm run dev             # sobe em http://localhost:4000 com reload (tsx watch)
 ```
 
@@ -73,30 +86,38 @@ modelo — ele lista todas as variaveis com explicacao:
 | `PORT` | nao | `4000` |
 | `ORIGEM_FRONTEND` | nao | `http://localhost:3000` |
 | `DATABASE_URL` | **sim** | — |
+| `GEMINI_API_KEY` | **sim** | — |
+| `SESSAO_SEGREDO` | **sim** | — |
+| `TELEGRAM_BOT_TOKEN` | nao (sem ele o bot nao liga) | — |
+| `TELEGRAM_AGENTES` | nao (lista `idTelegram:email`) | — |
 
-Sem a `DATABASE_URL` o servidor **nao sobe**: `src/db.ts` falha logo no
-inicio com uma mensagem clara (melhor do que quebrar so na primeira consulta
-ao banco). O `.env` esta no `.gitignore` e nunca vai para o Git — ele guarda
-a senha do banco.
+Sem `DATABASE_URL`, `GEMINI_API_KEY` ou `SESSAO_SEGREDO` o servidor **nao
+sobe**: o arquivo que usa cada uma (`db.ts`, `ia.ts` e `utils/token.ts`)
+falha logo no inicio com uma mensagem clara. O `.env` esta no `.gitignore` e
+nunca vai para o Git — ele guarda a senha do banco, a chave da IA, a chave
+das sessoes e o token do bot.
 
-**Identificacao temporaria (ainda sem login):** como a autenticacao real
-nao existe, toda chamada aos endpoints de chamados/comentarios precisa de
-dois cabecalhos dizendo quem e voce:
-
-```
-X-Usuario-Id: u-123
-X-Usuario-Papel: solicitante      # ou: agente
-```
-
-Sem eles, a API responde `401`. Exemplo:
+**Cadastrar usuarios:** nao existe tela de cadastro. Os usuarios sao criados
+pelo terminal; a senha e guardada so como resumo:
 
 ```
-curl http://localhost:4000/api/chamados \
-  -H "X-Usuario-Id: u-123" -H "X-Usuario-Papel: agente"
+npm run criar-usuario -- email senha papel "Nome Completo"
+npm run criar-usuario -- renata@empresa.com umaSenhaBoa agente "Renata Esther"
 ```
 
-Os endpoints de `/api/auth/*` ainda respondem `501` (a autenticacao entra
-em etapa futura).
+**Login:** `POST /api/auth/login` com `{ "email", "senha" }` devolve
+`{ token, usuario }`. Todas as outras rotas exigem o token no cabecalho:
+
+```
+Authorization: Bearer <token>
+```
+
+Sem token, com token alterado ou vencido (8 horas), a API responde `401`.
+Exemplo:
+
+```
+curl http://localhost:4000/api/chamados -H "Authorization: Bearer <token>"
+```
 
 ## 3. Estrutura de pastas
 
@@ -105,27 +126,44 @@ supportbox-backend/
 |- REGRAS_DE_NEGOCIO.md       regras que a camada Service aplica
 |- banco/
 |  |- schema.sql              cria as tabelas (rodar uma vez no Postgres)
+|  |- migracao-novembro.sql   usuarios + prazo_em, para bancos ja existentes
 |  '- COMO_RODAR.md           instalar o banco e liberar acesso pela rede
 |- src/
-|  |- controllers/            traducao HTTP <-> Service (auth ainda 501)
-|  |  |- AuthController.ts
+|  |- controllers/            traducao pedido <-> Service
+|  |  |- AuthController.ts       login, "quem sou eu" e sair
 |  |  |- ChamadosController.ts
-|  |  '- ComentariosController.ts
+|  |  |- ComentariosController.ts
+|  |  |- RelatoriosController.ts
+|  |  |- TriagemController.ts
+|  |  '- TelegramController.ts   porta de entrada do Telegram (laco do bot)
 |  |- services/               Model: camada Service (regras de negocio)
-|  |  |- ChamadosService.ts
-|  |  '- ComentariosService.ts
+|  |  |- AuthService.ts          confere e-mail e senha e entrega o token
+|  |  |- ChamadosService.ts      regras dos chamados, historico e prazo
+|  |  |- ComentariosService.ts
+|  |  |- RelatoriosService.ts
+|  |  |- TriagemService.ts       IA: passos sugeridos e prioridade
+|  |  |- AssistenteService.ts    IA: interpreta a mensagem do Telegram
+|  |  '- prazos.ts               calculo do prazo em dias uteis (regra 6)
 |  |- dao/                    Model: camada DAO (persistencia em SQL)
 |  |  |- ChamadosDAO.ts
-|  |  '- ComentariosDAO.ts
+|  |  |- ComentariosDAO.ts
+|  |  |- RelatoriosDAO.ts
+|  |  '- UsuariosDAO.ts
 |  |- routes/                 mapa de URL -> metodo do controller
 |  |  '- index.ts
-|  |- utils/                  infraestrutura HTTP (sem regra de negocio)
+|  |- scripts/
+|  |  '- criarUsuario.ts       comando "npm run criar-usuario"
+|  |- utils/                  infraestrutura (sem regra de negocio)
 |  |  |- http.ts              tipos compartilhados + resposta JSON + traducao de erro
 |  |  |- corpo.ts             leitor de corpo JSON
-|  |  '- ator.ts              le os cabecalhos X-Usuario-* (auth temporaria)
-|  |- dominio.ts              tipos do dominio (papel, status, prioridade, chamado, comentario)
-|  |- erros.ts                erros de dominio (Validacao, AcessoNegado, NaoEncontrado)
+|  |  |- ator.ts              identifica quem pede, lendo o token de sessao
+|  |  |- token.ts             cria e confere o token de sessao assinado
+|  |  '- senha.ts             gera e confere o resumo da senha (scrypt)
+|  |- dominio.ts              tipos do dominio (usuario, chamado, comentario...)
+|  |- erros.ts                erros de dominio (Validacao, NaoAutenticado, AcessoNegado, NaoEncontrado)
 |  |- db.ts                   conexao unica com o Postgres (pool), usada pelas DAOs
+|  |- ia.ts                   conexao com o Google Gemini (le a GEMINI_API_KEY)
+|  |- telegram.ts             conversa com a API de bots do Telegram (so fetch)
 |  |- app.ts                  dispatcher de rotas (http nativo, sem framework)
 |  '- server.ts               sobe o servidor HTTP
 |- package.json
@@ -134,15 +172,20 @@ supportbox-backend/
 '- .gitignore
 ```
 
-Este projeto ja trocou de banco **duas vezes** — memoria → Supabase →
-PostgreSQL nativo — e as duas trocas foram **locais as DAOs** (mais o arquivo
-de conexao). O Service e o Controller nunca precisaram saber que o banco
-mudou. E o retorno pratico de manter as camadas separadas.
+Este projeto ja trocou de banco **duas vezes** — de dados em memoria para um
+banco hospedado e, depois, para o PostgreSQL nativo — e as duas trocas foram
+**locais as DAOs** (mais o arquivo de conexao). O Service e o Controller
+nunca precisaram saber que o banco mudou. E o retorno pratico de manter as
+camadas separadas.
 
 Da primeira vez houve um unico efeito em cadeia: como ir ao banco leva tempo,
 as DAOs viraram assincronas e o `await` subiu por Service e Controller. Da
-segunda (Supabase → Postgres), **nenhuma linha fora de `src/dao/` e
+segunda (para o PostgreSQL nativo), **nenhuma linha fora de `src/dao/` e
 `src/db.ts` mudou**.
+
+A troca da identificacao temporaria pelo login real seguiu a mesma logica:
+como so o `utils/ator.ts` sabia de onde vinha a identidade, os Controllers
+nao mudaram de logica.
 
 ## 4. Convencoes
 
@@ -155,7 +198,7 @@ segunda (Supabase → Postgres), **nenhuma linha fora de `src/dao/` e
   entrada e responde. Quem decide regra e o Service; quem fala com o banco
   e o DAO.
 
-## 5. O que vem pela frente
+## 5. O que ja foi feito e o que vem pela frente
 
 - [x] Etapa 1: Controllers + documento de regras de negocio.
 - [x] Etapa 2: Camada **Service** (regras de negocio) — chamados e
@@ -166,23 +209,29 @@ segunda (Supabase → Postgres), **nenhuma linha fora de `src/dao/` e
   CORS habilitado.
 - [x] Etapa 5: Trocar a memoria por um banco de verdade (DAOs assincronas)
   e integrar com o frontend.
-- [x] Etapa 6: Migrar do Supabase para **PostgreSQL nativo**, rodando na
-  maquina de um integrante. SQL escrito a mao, biblioteca `pg`.
-- [ ] Etapa 7: Autenticacao real (login/token) no lugar dos cabecalhos
-  temporarios; comentarios automaticos do "Sistema" (regra 5); SLA (regra 6).
+- [x] Etapa 6: Migrar para **PostgreSQL nativo**, rodando na maquina de um
+  integrante. SQL escrito a mao, biblioteca `pg`.
+- [x] Etapa 7: **Triagem por IA** na abertura (Google Gemini): passos
+  sugeridos e prioridade, gravada no chamado.
+- [x] Etapa 8: **Relatorio de atendimentos** por periodo.
+- [x] Etapa 9: **Bot do Telegram**: o agente comenta e conclui chamados em
+  linguagem natural, passando pelos mesmos Services.
+- [x] Etapa 10: **Login real** (senha protegida e token de sessao),
+  **historico automatico** do "Sistema" (regra 5) e **prazo de resolucao**
+  em dias uteis (regra 6).
+- [ ] Etapa 11: publicacao fora da maquina local e testes automatizados.
 
-### Regras ainda nao implementadas
+### Regras ainda nao implementadas por completo
 
-Estao documentadas em `REGRAS_DE_NEGOCIO.md`, mas ainda **nao valem** no
-codigo — nao confie nelas:
+Estao documentadas em `REGRAS_DE_NEGOCIO.md`:
 
-- **Regra 5 (parcial):** comentarios automaticos do autor `Sistema` a cada
-  mudanca de status, atribuicao ou prioridade. A parte de imutabilidade
-  (sem editar/apagar) ja vale.
-- **Regra 6:** SLA por prioridade. Nada de prazo e calculado hoje.
-- **Regra 2 (parcial):** nao ha como conferir se o id passado em
-  `/atribuir` pertence mesmo a um agente — falta a tabela de usuarios,
-  que chega junto com a autenticacao.
-- **Regra 3 (seguranca):** os cabecalhos `X-Usuario-*` sao autodeclarados.
-  Qualquer cliente pode se dizer "agente" e ver todos os chamados. Isso so
-  fecha de verdade na etapa de autenticacao.
+- **Regra 6 (parcial):** so o prazo de **resolucao** existe, contado em dias
+  uteis (segunda a sexta). Ainda faltam o prazo de 1a resposta, a pausa do
+  cronometro enquanto se espera o solicitante e os feriados.
+- **Regra 2 (parcial):** o `/atribuir` ainda nao confere se o novo
+  responsavel e um agente cadastrado na tabela `usuarios`.
+
+### Limitacao conhecida do login
+
+O token nao fica guardado no servidor. Por isso "sair" apaga o token so no
+navegador: uma copia dele continuaria valendo ate vencer (8 horas).

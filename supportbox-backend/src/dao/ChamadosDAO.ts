@@ -15,6 +15,10 @@ export type DadosCriarChamado = {
   // Vem ja validada do Service (da triagem por IA, ou "media" por padrao).
   // A DAO nao decide prioridade: so grava a que recebeu.
   prioridade: Prioridade;
+  // Prazo de resolucao (regra 6), ja calculado pelo Service com o
+  // services/prazos.ts. A DAO nao calcula nada: so grava o que recebeu.
+  prazoEm: Date;
+
 };
 
 const TABELA = "chamados";
@@ -36,6 +40,8 @@ function paraChamado(linha: any): Chamado {
     agenteId: linha.agente_id,
     criadoEm: linha.criado_em,
     concluidoEm: linha.concluido_em ?? null,
+    prazoEm: linha.prazo_em ?? null, // nulo em chamados antigos
+
   };
 }
 
@@ -48,9 +54,11 @@ export class ChamadosDAO {
     const linhas = await consultar(
       `INSERT INTO ${TABELA}
          (protocolo, titulo, descricao, categoria, tipo,
-          status, prioridade, solicitante_id, agente_id, concluido_em)
-       VALUES ($1, $2, $3, $4, $5, 'aberto', $6, $7, NULL, NULL)
-       RETURNING *`,
+         status, prioridade, solicitante_id, agente_id, concluido_em,
+         prazo_em)
+      VALUES ($1, $2, $3, $4, $5, 'aberto', $6, $7, NULL, NULL, $8)
+      RETURNING *`,
+
       [
         protocolo,
         dados.titulo,
@@ -59,6 +67,8 @@ export class ChamadosDAO {
         dados.tipo,
         dados.prioridade,
         dados.solicitanteId,
+        dados.prazoEm,
+
       ],
     );
 
@@ -84,17 +94,20 @@ export class ChamadosDAO {
   async atualizar(chamado: Chamado): Promise<Chamado> {
     const linhas = await consultar(
       `UPDATE ${TABELA}
-          SET status       = $1,
-              prioridade   = $2,
-              agente_id    = $3,
-              concluido_em = $4
-        WHERE id = $5
+        SET status       = $1,
+            prioridade   = $2,
+            agente_id    = $3,
+            concluido_em = $4,
+            prazo_em     = $5
+        WHERE id = $6
+
         RETURNING *`,
       [
         chamado.status,
         chamado.prioridade,
         chamado.agenteId,
         chamado.concluidoEm,
+        chamado.prazoEm,
         chamado.id,
       ],
     );

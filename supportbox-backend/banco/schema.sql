@@ -12,6 +12,11 @@
 --  Pode rodar mais de uma vez sem medo: tudo aqui usa IF NOT EXISTS,
 --  entao rodar de novo nao apaga nada nem da erro.
 --
+--  BANCO QUE JA EXISTIA ANTES DE NOVEMBRO? Rode tambem o
+--  banco/migracao-novembro.sql. O IF NOT EXISTS pula uma tabela que
+--  ja existe inteira - ele nao acrescenta colunas novas, como a
+--  prazo_em. Quem acrescenta e a migracao.
+--
 --  REQUISITO: PostgreSQL 13 ou mais novo. A funcao gen_random_uuid(),
 --  usada para gerar os ids, so passou a vir de fabrica nessa versao.
 --  Para conferir a sua:  psql -U postgres -c "SELECT version();"
@@ -64,10 +69,11 @@ CREATE TABLE IF NOT EXISTS chamados (
   prioridade      text        NOT NULL DEFAULT 'media'
                               CHECK (prioridade IN ('baixa', 'media', 'alta')),
 
-  -- Quem abriu e quem atende. Sao TEXT (e nao referencias a uma tabela
-  -- de usuarios) porque ainda nao existe cadastro de pessoas: hoje
-  -- guardam o e-mail digitado na tela de entrada. Quando a
-  -- autenticacao real chegar, viram uuid REFERENCES usuarios(id).
+  -- Quem abriu e quem atende. Guardam o E-MAIL da pessoa, que e o id
+  -- usado em todo o sistema (inclusive na tabela usuarios). Ficam como
+  -- TEXT, e nao como uuid REFERENCES usuarios(id), de proposito: assim
+  -- os chamados antigos nao precisaram ser migrados, e o Telegram
+  -- continua identificando o agente pelo e-mail.
   solicitante_id  text        NOT NULL,
   agente_id       text,       -- nulo enquanto o chamado esta "aberto"
 
@@ -75,7 +81,12 @@ CREATE TABLE IF NOT EXISTS chamados (
   -- data gravada aqui seria lida errado por quem estivesse em outro
   -- fuso - e o prazo de 7 dias da regra 7 sairia torto.
   criado_em       timestamptz NOT NULL DEFAULT now(),
-  concluido_em    timestamptz            -- nulo ate a conclusao
+  concluido_em    timestamptz,           -- nulo ate a conclusao
+
+  -- Prazo de resolucao (SLA, regra 6), calculado pelo Service em dias
+  -- uteis a partir da prioridade: alta 1, media 3, baixa 5. Aceita
+  -- nulo porque chamados antigos podem nao ter prazo.
+  prazo_em        timestamptz
 );
 
 -- A listagem principal ordena por criado_em DESC (mais novos primeiro).
@@ -115,3 +126,32 @@ CREATE TABLE IF NOT EXISTS comentarios (
 -- usadas atende filtro e ordenacao de uma vez.
 CREATE INDEX IF NOT EXISTS idx_comentarios_chamado
     ON comentarios (chamado_id, criado_em ASC);
+
+
+-- ------------------------------------------------------------
+--  Tabela: usuarios
+-- ------------------------------------------------------------
+--  Quem pode entrar no sistema (item 1 - autenticacao real). A senha
+--  NUNCA e guardada: so o resumo dela (senha_hash, no formato
+--  salt:hash), gerado pelo src/utils/senha.ts. Do resumo nao da para
+--  voltar a senha, entao se o banco vazar, as senhas nao vazam.
+--
+--  Nao ha tela de cadastro: os usuarios sao criados pelo terminal,
+--  com  npm run criar-usuario -- email senha papel "Nome".
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS usuarios (
+  id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  nome        text        NOT NULL,
+
+  -- O e-mail e o login e tambem o id gravado nos chamados. UNIQUE
+  -- porque duas pessoas nao podem entrar com o mesmo e-mail.
+  email       text        NOT NULL UNIQUE,
+
+  senha_hash  text        NOT NULL,
+
+  papel       text        NOT NULL
+                          CHECK (papel IN ('solicitante', 'agente')),
+
+  criado_em   timestamptz NOT NULL DEFAULT now()
+);

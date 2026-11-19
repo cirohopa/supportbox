@@ -16,7 +16,7 @@ if (!urlDoBanco) {
 }
 
 // Postgres em rede local costuma NAO ter SSL, e liga-lo quebra a conexao.
-// Banco na internet (Supabase) exige SSL. A expressao detecta enderecos
+// A expressao detecta enderecos
 // locais (localhost) e das faixas de rede privada (10.x, 192.168.x, 172.16-31.x).
 const REDE_LOCAL =
   /@(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;

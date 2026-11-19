@@ -2,7 +2,12 @@
 // Controllers, e as duas funcoes que escrevem a resposta.
 
 import type { IncomingMessage, ServerResponse } from "http";
-import { ErroAcessoNegado, ErroNaoEncontrado, ErroValidacao } from "../erros";
+import {
+  ErroAcessoNegado,
+  ErroNaoAutenticado,
+  ErroNaoEncontrado,
+  ErroValidacao,
+} from "../erros";
 
 // O que o dispatcher (app.ts) extrai da URL e entrega ao Controller.
 //   parametros: os `:id` da rota      -> /api/chamados/42  vira { id: "42" }
@@ -35,6 +40,9 @@ export function responder(
 export function responderErro(res: ServerResponse, erro: unknown): void {
   if (erro instanceof ErroValidacao) {
     return responder(res, 400, { erro: erro.message });
+  }
+  if (erro instanceof ErroNaoAutenticado) {
+    return responder(res, 401, { erro: erro.message });
   }
   if (erro instanceof ErroAcessoNegado) {
     return responder(res, 403, { erro: erro.message });

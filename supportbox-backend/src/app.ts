@@ -21,7 +21,7 @@ export function criarManipulador() {
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
     res.setHeader(
       "Access-Control-Allow-Headers",
-      "Content-Type, Authorization, X-Usuario-Id, X-Usuario-Papel",
+      "Content-Type, Authorization",
     );
 
     // Antes de um POST/PATCH com JSON, o navegador manda um OPTIONS

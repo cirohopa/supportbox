@@ -17,7 +17,7 @@ export default function PaginaPainelDados() {
   useEffect(() => {
     const s = lerSessao();
     if (!s) {
-      router.replace("/login");
+      router.replace("/login?expirou=1");
       return;
     }
     listarChamados(s)

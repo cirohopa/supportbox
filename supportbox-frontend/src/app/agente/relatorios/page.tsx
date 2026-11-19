@@ -20,7 +20,7 @@ export default function PaginaRelatorios() {
   useEffect(() => {
     const s = lerSessao();
     if (!s) {
-      router.replace("/login");
+      router.replace("/login?expirou=1");
     }
   }, [router]);
 
@@ -28,7 +28,7 @@ export default function PaginaRelatorios() {
   async function extrair() {
     const sessao = lerSessao();
     if (!sessao) {
-      router.replace("/login");
+      router.replace("/login?expirou=1");
       return;
     }
 

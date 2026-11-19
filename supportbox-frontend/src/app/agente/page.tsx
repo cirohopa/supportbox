@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
 import { PainelAgente } from "@/views/agente/PainelAgente";
 import type {
   ChamadoDetalhado,
@@ -34,15 +35,19 @@ export default function PaginaAgente() {
   const [sessao, setSessao] = useState<Sessao | null>(null);
   const [chamados, setChamados] = useState<ChamadoResumo[]>([]);
   const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(true);
 
   /** Busca a lista completa de chamados e atualiza a tela. */
   const carregarChamados = useCallback(async (s: Sessao) => {
+    setCarregando(true);
     try {
       const { itens } = await listarChamados(s);
       setChamados(itens.map(paraResumo));
       setErro(null);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao carregar os chamados.");
+    } finally {
+      setCarregando(false);
     }
   }, []);
 
@@ -50,14 +55,26 @@ export default function PaginaAgente() {
   useEffect(() => {
     const s = lerSessao();
     if (!s) {
-      router.replace("/login");
+      router.replace("/login?expirou=1");
       return;
     }
     setSessao(s);
     void carregarChamados(s);
   }, [router, carregarChamados]);
 
-  if (!sessao) return null;
+  if (!sessao) {
+    return (
+      <main
+        role="status"
+        aria-label="Carregando painel"
+        className="space-y-6 p-4 sm:p-6 lg:p-8"
+      >
+        <div className="h-8 w-40 animate-pulse rounded bg-slate-200" />
+        <div className="h-10 w-full animate-pulse rounded-lg bg-slate-100" />
+        <div className="h-64 w-full animate-pulse rounded-xl border border-linha bg-papel" />
+      </main>
+    );
+  }
 
   /** Busca um chamado completo (chamado + comentários) para a janela. */
   const obterDetalhes = async (
@@ -108,13 +125,20 @@ export default function PaginaAgente() {
   return (
     <>
       {erro && (
-        <div className="bg-red-100 text-red-800 text-sm px-4 py-2 text-center">
-          {erro} Verifique se o backend está rodando em
-          http://localhost:4000.
+        <div
+          role="alert"
+          className="mx-4 mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:mx-6 lg:mx-8"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+          <p>
+            {erro} Verifique se o backend está rodando em
+            http://localhost:4000.
+          </p>
         </div>
       )}
       <PainelAgente
         chamados={chamados}
+        carregando={carregando}
         obterDetalhes={obterDetalhes}
         aoAssumir={aoAssumir}
         aoConcluir={aoConcluir}

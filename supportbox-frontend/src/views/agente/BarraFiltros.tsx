@@ -52,39 +52,40 @@ export function BarraFiltros({
   aoMudarAba,
 }: PropsBarraFiltros) {
   return (
-    <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-      {/*
-        Campo de busca por palavra. O ícone de lupa fica posicionado
-        de forma absoluta dentro da caixa, à esquerda do texto.
-      */}
-      <div className="relative w-full sm:max-w-xs">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-tintaFraca" />
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative w-full sm:max-w-sm sm:flex-1">
+        <Search
+          aria-hidden="true"
+          className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-tintaFraca"
+        />
         <input
+          aria-label="Pesquisar chamados"
           type="search"
           value={termoBusca}
           onChange={(e) => aoMudarBusca(e.target.value)}
           placeholder="Pesquisar por título, protocolo ou solicitante"
-          className="w-full h-10 pl-9 pr-3 border border-linha rounded-md bg-papel text-sm focus:outline-none focus:ring-2 focus:ring-marca/30 focus:border-marca"
+          className="h-10 w-full rounded-lg border border-linha bg-papel pl-9 pr-3 text-sm transition-shadow placeholder:text-slate-400 focus:border-marca focus:outline-none focus:ring-2 focus:ring-marca/20"
         />
       </div>
 
-      {/*
-        Conjunto de abas. Ao clicar em uma delas, chamamos
-        aoMudarAba com o valor correspondente. A aba ativa recebe
-        o destaque visual da marca.
-      */}
-      <div className="flex flex-wrap gap-1 bg-fundo p-1 rounded-md border border-linha">
+      <div
+        role="group"
+        aria-label="Filtrar por situação"
+        className="flex w-full gap-1 overflow-x-auto rounded-lg border border-linha bg-fundo p-1 sm:w-auto"
+      >
         {ABAS.map(({ valor, rotulo }) => {
           const ativa = valor === abaAtiva;
           return (
             <button
+              type="button"
+              aria-pressed={ativa}
               key={valor}
               onClick={() => aoMudarAba(valor)}
               className={[
-                "px-3 py-1 text-xs rounded",
+                "flex-1 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-marca sm:flex-none",
                 ativa
-                  ? "bg-marca text-white"
-                  : "text-tintaFraca hover:bg-papel",
+                  ? "bg-papel text-tinta shadow-sm"
+                  : "text-tintaFraca hover:bg-papel/70 hover:text-tinta",
               ].join(" ")}
             >
               {rotulo}

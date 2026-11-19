@@ -131,7 +131,7 @@ Cada componente segue alguns princípios do SOLID:
 │   ├── lib/                                 conversa com o backend (sem visual)
 │   │   ├── api.ts                           cliente HTTP da API
 │   │   ├── mapeamento.ts                    traduz dados do backend p/ as telas
-│   │   └── sessao.ts                        identidade do usuario (localStorage)
+│   │   └── sessao.ts                        sessão autenticada e token (localStorage)
 │   └── css.d.ts                             declaração de tipo para CSS global
 │
 ├── .env.local.example    -> modelo do .env.local (endereço da API)

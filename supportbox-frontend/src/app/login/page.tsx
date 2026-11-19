@@ -1,87 +1,104 @@
 /**
- * Tela de entrada do sistema.
- *
- * Centraliza o formulario de acesso em uma caixa simples sobre o fundo
- * neutro. Como ainda nao temos autenticacao de verdade (validacao de
- * usuario e senha), a entrada usa um atalho: a senha e ignorada, e o
- * PAPEL vem do e-mail - se ele contem a palavra "agente", a pessoa entra
- * como agente; qualquer outro e-mail entra como solicitante.
- *
- * O e-mail informado vira a "identidade" (id) guardada na sessao do
- * navegador (`lib/sessao.ts`) e e enviado ao backend em toda chamada
- * (cabecalho `X-Usuario-Id`). Quando a autenticacao real for adicionada,
- * `aoEnviar` passa a validar de verdade e a guardar um token - e esta tela
- * quase nao muda.
- *
- * Marcado como "use client" porque usa `useRouter` e `localStorage`, que
- * so existem no navegador.
+ * Tela de entrada do sistema, autenticada pelo backend.
  */
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FormularioLogin } from "@/views/auth/FormularioLogin";
 import { salvarSessao } from "@/lib/sessao";
+import { entrar, ErroApi } from "@/lib/api";
 
 export default function PaginaLogin() {
   const router = useRouter();
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [sessaoExpirada, setSessaoExpirada] = useState(false);
 
-  /**
-   * Recebe o e-mail digitado, monta a sessao (identidade + papel) e leva
-   * o usuario ao painel certo. A senha nao e usada nesta etapa.
-   */
-  const aoEnviar = (email: string) => {
-    const papel = email.toLowerCase().includes("agente")
-      ? "agente"
-      : "solicitante";
+  useEffect(() => {
+    setSessaoExpirada(
+      new URLSearchParams(window.location.search).get("expirou") === "1",
+    );
+  }, []);
 
-    // Sem cadastro de usuarios, a identidade e o display name sao o
-    // proprio e-mail. O backend so precisa de um id estavel + o papel.
-    salvarSessao({ id: email, nome: email, papel });
-
-    router.push(papel === "agente" ? "/agente" : "/solicitante");
+  const aoEnviar = async (email: string, senha: string) => {
+    setCarregando(true);
+    setErro(null);
+    try {
+      const sessao = await entrar(email, senha);
+      salvarSessao(sessao);
+      router.replace(sessao.papel === "agente" ? "/agente" : "/solicitante");
+    } catch (e) {
+      setErro(
+        e instanceof ErroApi && e.status === 401
+          ? "E-mail ou senha inválidos."
+          : e instanceof Error
+            ? e.message
+            : "Não foi possível entrar.",
+      );
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-4 bg-fundo">
-      {/* Identificação do sistema acima do formulário. */}
-      <div className="mb-6 text-center">
-        {/*
-          Logo do sistema. O arquivo está em `public/`, e tudo que fica
-          nessa pasta é servido a partir da raiz do site — por isso o
-          caminho começa com "/" e não inclui a palavra "public".
+    <main className="grid min-h-screen bg-fundo md:grid-cols-2">
+      <section className="flex min-h-[34vh] flex-col justify-between bg-slate-950 px-6 py-8 text-white sm:px-10 md:min-h-screen md:px-12 md:py-12">
+        <div className="flex items-center gap-3">
+          <Image
+            src="/logo-supportbox.png"
+            alt=""
+            width={512}
+            height={453}
+            priority
+            className="h-12 w-12 rounded-xl bg-white p-1.5 object-contain"
+          />
+          <span className="text-lg font-semibold tracking-tight">SupportBox</span>
+        </div>
+        <div className="mt-8 max-w-lg md:mb-12">
+          <p className="mb-3 text-sm font-medium uppercase tracking-[0.16em] text-orange-300">
+            Central de Serviços de TI
+          </p>
+          <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
+            Atendimento organizado, do primeiro contato à solução.
+          </h1>
+          <p className="mt-4 max-w-md text-sm leading-6 text-slate-300">
+            Acesse sua conta para acompanhar solicitações e manter o trabalho
+            fluindo.
+          </p>
+        </div>
+        <p className="hidden text-xs text-slate-400 md:block">
+          SupportBox · Central de Serviços de TI
+        </p>
+      </section>
 
-          `w-40` fixa a largura em 160px e `h-auto` deixa a altura se
-          ajustar sozinha, preservando a proporção original da imagem.
-          `priority` carrega a logo junto com a página, sem piscar.
-        */}
-        <Image
-          src="/logo-supportbox.png"
-          alt="SupportBox"
-          width={512}
-          height={453}
-          priority
-          className="mx-auto mb-4 w-44 h-auto"
-        />
-        {/*
-          O nome do sistema continua no HTML para leitores de tela
-          (acessibilidade), mesmo já aparecendo escrito dentro da logo.
-        */}
-        <h1 className="sr-only">SupportBox</h1>
-        <p className="text-sm text-tintaFraca">Central de Serviços de TI</p>
-      </div>
-
-      <FormularioLogin aoEnviar={aoEnviar} />
-
-      {/*
-        Aviso para o avaliador. Lembra que a tela existe mas não
-        valida credenciais de verdade nesta etapa.
-      */}
-      <p className="text-xs text-tintaFraca mt-6 text-center max-w-sm">
-        Esta é a etapa sem autenticação real: a senha é ignorada. Use um e-mail
-        com a palavra &quot;agente&quot; para entrar como técnico, ou qualquer
-        outro endereço para entrar como solicitante.
-      </p>
+      <section className="flex items-center justify-center px-4 py-10 sm:px-8 md:px-12">
+        <div className="w-full max-w-md">
+          <div className="mb-8">
+            <p className="text-sm font-medium text-marca-forte">Bem-vindo</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-tinta">
+              Entre na sua conta
+            </h2>
+            <p className="mt-2 text-sm text-tintaFraca">
+              Use seu e-mail corporativo e sua senha.
+            </p>
+          </div>
+          {sessaoExpirada && (
+            <p
+              role="status"
+              className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              Sua sessão expirou. Entre novamente.
+            </p>
+          )}
+          <FormularioLogin
+            aoEnviar={aoEnviar}
+            carregando={carregando}
+            erro={erro}
+          />
+        </div>
+      </section>
     </main>
   );
 }

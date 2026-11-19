@@ -1,21 +1,95 @@
 /**
  * Cliente HTTP do backend SupportBox.
  *
- * Concentra TODA a conversa com a API: a URL base, os cabecalhos de
- * identificacao (`X-Usuario-*`) e a leitura da resposta. As telas nunca
- * chamam `fetch` direto - elas usam as funcoes daqui.
- *
- * Identidade: como ainda nao ha login de verdade, cada funcao recebe a
- * `Sessao` (quem esta agindo) e a envia nos cabecalhos. Quando a auth real
- * chegar, basta trocar esses cabecalhos por um token, so aqui dentro.
+ * Concentra toda a conversa com a API, incluindo autenticacao por token.
  */
-import type { Sessao } from "./sessao";
+import { limparSessao, type PapelUsuario, type Sessao } from "./sessao";
 
 /**
  * Endereco do backend. Vem de `NEXT_PUBLIC_API_URL` (definido em
  * `.env.local`); o padrao e o backend local em desenvolvimento.
  */
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
+export class ErroApi extends Error {
+  constructor(
+    public readonly status: number,
+    mensagem: string,
+  ) {
+    super(mensagem);
+    this.name = "ErroApi";
+  }
+}
+
+async function lerResposta<T>(resposta: Response): Promise<T> {
+  const texto = await resposta.text();
+  let dados: unknown = null;
+  if (texto) {
+    try {
+      dados = JSON.parse(texto);
+    } catch {
+      throw new Error("Resposta inválida do servidor.");
+    }
+  }
+
+  if (!resposta.ok) {
+    const mensagem =
+      typeof dados === "object" &&
+      dados !== null &&
+      "erro" in dados &&
+      typeof dados.erro === "string"
+        ? dados.erro
+        : `Erro ${resposta.status}`;
+    throw new ErroApi(resposta.status, mensagem);
+  }
+
+  return dados as T;
+}
+
+function tratarSessaoExpirada(): void {
+  limparSessao();
+  if (typeof window !== "undefined") {
+    window.location.assign("/login?expirou=1");
+  }
+}
+
+/** Autentica o usuario e monta a sessao usada pelo restante do frontend. */
+export async function entrar(email: string, senha: string): Promise<Sessao> {
+  const resposta = await fetch(`${BASE}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, senha }),
+  });
+  const dados = await lerResposta<{
+    token: string;
+    usuario: { email: string; nome: string; papel: PapelUsuario };
+  }>(resposta);
+
+  if (
+    !dados ||
+    typeof dados.token !== "string" ||
+    !dados.token ||
+    !dados.usuario ||
+    typeof dados.usuario.email !== "string" ||
+    typeof dados.usuario.nome !== "string" ||
+    (dados.usuario.papel !== "agente" &&
+      dados.usuario.papel !== "solicitante")
+  ) {
+    throw new Error("Resposta de login inválida.");
+  }
+
+  return {
+    id: dados.usuario.email,
+    nome: dados.usuario.nome,
+    papel: dados.usuario.papel,
+    token: dados.token,
+  };
+}
+
+/** Notifica o backend da saída; a sessao é apagada pela tela que chamou. */
+export async function sair(sessao: Sessao): Promise<void> {
+  await requisitar<void>("POST", "/api/auth/logout", sessao);
+}
 
 /**
  * Formato de um chamado como o BACKEND devolve (valores em minusculo,
@@ -35,6 +109,7 @@ export interface ChamadoApi {
   agenteId: string | null;
   criadoEm: string;
   concluidoEm: string | null;
+  prazoEm: string | null;
 }
 
 /** Formato de um comentario como o backend devolve. */
@@ -99,7 +174,7 @@ export interface RelatorioApi {
  *
  * @param metodo verbo HTTP (GET, POST, PATCH...)
  * @param caminho caminho da rota (ex.: "/api/chamados")
- * @param sessao quem esta fazendo a chamada (vira os cabecalhos de ator)
+ * @param sessao quem esta fazendo a chamada (token Bearer de autenticacao)
  * @param corpo objeto a enviar como JSON no corpo (opcional)
  */
 async function requisitar<T>(
@@ -112,26 +187,16 @@ async function requisitar<T>(
     method: metodo,
     headers: {
       "Content-Type": "application/json",
-      "X-Usuario-Id": sessao.id,
-      "X-Usuario-Papel": sessao.papel,
+      Authorization: `Bearer ${sessao.token}`,
     },
     body: corpo === undefined ? undefined : JSON.stringify(corpo),
   });
 
-  // Le o corpo como texto primeiro: assim lidamos com respostas sem corpo
-  // (ex.: 204) sem o `JSON.parse` quebrar.
-  const texto = await resposta.text();
-  const dados = texto ? JSON.parse(texto) : null;
-
-  if (!resposta.ok) {
-    const mensagem =
-      dados && typeof dados.erro === "string"
-        ? dados.erro
-        : `Erro ${resposta.status}`;
-    throw new Error(mensagem);
+  if (resposta.status === 401) {
+    tratarSessaoExpirada();
   }
 
-  return dados as T;
+  return lerResposta<T>(resposta);
 }
 
 // --- Chamados ---------------------------------------------------------

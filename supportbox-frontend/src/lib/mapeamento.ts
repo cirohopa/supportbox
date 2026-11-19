@@ -70,6 +70,7 @@ export function paraResumo(c: ChamadoApi): ChamadoResumo {
     status: STATUS[c.status],
     atribuidoA: c.agenteId ?? undefined,
     criadoEmFormatado: formatarDataHora(c.criadoEm),
+    prazoEm: c.prazoEm,
   };
 }
 

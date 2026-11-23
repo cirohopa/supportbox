@@ -1,29 +1,21 @@
-/*
- * Estilos globais do sistema.
-
- 
- * Diretivas que carregam o Tailwind no projeto. Habilitam as classes
- * utilitárias usadas pelos componentes para cor, espaçamento,
- * alinhamento e texto.
- */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/*
- * Cor de fundo e cor de texto padrão para o sistema todo.
- */
-html,
-body {
-  background-color: #f8fafc;
-  color: #0f172a;
+@layer base {
+  body {
+    @apply bg-fundo text-texto antialiased selection:bg-marca-suave selection:text-marca;
+  }
 }
 
-/*
- * Mantém o foco visível ao navegar pelo teclado. Acessibilidade quem não usa o mouse precisa enxergar onde está o foco para navegar pelo sistema.
- */
-*:focus-visible {
-  outline: 2px solid #ff7000;
-  outline-offset: 2px;
+@media print {
+  aside,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background-color: #ffffff !important;
+  }
 }

@@ -1,95 +1,118 @@
-/**
- * Faixa superior usada nas páginas do solicitante.
- *
- * Mostra a identificação do sistema à esquerda, o nome do usuário
- * entrado e o botão para sair à direita. O painel do agente usa
- * uma barra lateral em vez deste cabeçalho, então o componente é
- * importado só pelas telas do solicitante.
- *
- * O cabeçalho não busca dados por conta própria. Recebe o nome do
- * usuário pronto e dispara aoSairClicado quando o usuário aperta
- * o botão. Quem usa o componente decide o que fazer no logout.
- */
-"use client";
+import React from 'react';
+import { LogOut, Inbox, CheckCircle2 } from 'lucide-react';
+import Botao from './Botao';
 
-import Image from "next/image";
-import { LogOut } from "lucide-react";
-import { Botao } from "./Botao";
-
-interface PropsCabecalho {
-  /** Nome do usuário entrado, exibido à direita do cabeçalho. */
-  nomeUsuario: string;
-  /**
-   * Texto curto de apoio que aparece embaixo do nome do sistema.
-   * Útil para identificar de qual área o usuário faz parte, como
-   * Portal do Solicitante.
-   */
-  subtitulo?: string;
-  /**
-   * Função chamada quando o usuário aperta o botão Sair. Ela
-   * recebe a responsabilidade de desligar a sessão e mandar o
-   * usuário para a tela de entrada.
-   */
-  aoSairClicado?: () => void;
+export interface PropsCabecalho {
+  nomeUsuario?: string;
+  emailUsuario?: string;
+  perfil?: string;
+  aoSair?: () => void;
 }
 
-export function Cabecalho({
+export default function Cabecalho({
   nomeUsuario,
-  subtitulo,
-  aoSairClicado,
+  emailUsuario,
+  perfil,
+  aoSair,
 }: PropsCabecalho) {
+  function obterIniciais() {
+    const base = nomeUsuario?.trim() || emailUsuario?.trim() || 'U';
+    const partes = base.split(' ').filter(Boolean);
+    if (partes.length >= 2) {
+      return (partes[0][0] + partes[1][0]).toUpperCase();
+    }
+    return base.slice(0, 2).toUpperCase();
+  }
+
   return (
-    <header className="bg-papel border-b border-linha">
-      <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/*
-          Identificação do sistema: a marca à esquerda do nome.
+    <header className="w-full bg-superficie border-b border-borda px-6 py-3 flex items-center justify-between no-print">
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-lg bg-marca text-white font-bold flex items-center justify-center text-sm shadow-sm">
+          SB
+        </div>
+        <div>
+          <span className="font-bold text-texto text-base tracking-tight">
+            SupportBox
+          </span>
+          {perfil && (
+            <span className="ml-2 text-xs font-medium px-2 py-0.5 rounded-md bg-slate-100 text-textoSuave">
+              {perfil}
+            </span>
+          )}
+        </div>
+      </div>
 
-          A imagem é só a caixa do logo, sem as palavras — a versão
-          completa (com o nome escrito) fica na tela de login. Aqui o
-          nome já aparece ao lado em texto, então repeti-lo dentro da
-          imagem ficaria duplicado.
-
-          O arquivo está em `public/`, e tudo que fica nessa pasta é
-          servido a partir da raiz do site — por isso o caminho começa
-          com "/" e não inclui a palavra "public".
-
-          `width` e `height` são o tamanho real do arquivo (160x160);
-          quem manda no tamanho na tela é o `w-9 h-9` (36px). O Next
-          precisa dos dois números para reservar o espaço antes da
-          imagem carregar, evitando que a página "pule".
-        */}
-        <div className="flex items-center gap-3">
-          <Image
-            src="/logo-supportbox-icone.png"
-            alt=""
-            width={160}
-            height={160}
-            priority
-            className="w-9 h-9"
-          />
-          <div>
-            <h1 className="text-base font-semibold text-tinta tracking-tight">
-              SupportBox
-            </h1>
-            {subtitulo && (
-              <p className="text-xs text-tintaFraca">{subtitulo}</p>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-marca-suave border border-marca-borda text-marca font-semibold text-xs flex items-center justify-center">
+            {obterIniciais()}
+          </div>
+          <div className="hidden sm:flex flex-col text-right">
+            <span className="text-xs font-semibold text-texto leading-tight">
+              {nomeUsuario || emailUsuario || 'Usuário'}
+            </span>
+            {nomeUsuario && emailUsuario && (
+              <span className="text-[11px] text-textoSuave leading-tight">
+                {emailUsuario}
+              </span>
             )}
           </div>
         </div>
 
-        {/*
-          Identificação do usuário e botão de sair. O nome desaparece
-          em telas pequenas para dar espaço ao botão.
-        */}
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-tintaFraca hidden sm:inline">
-            {nomeUsuario}
-          </span>
-          <Botao variante="secundario" onClick={aoSairClicado}>
-            <LogOut className="w-4 h-4" /> Sair
+        {aoSair && (
+          <Botao
+            variante="fantasma"
+            tamanho="sm"
+            onClick={aoSair}
+            icone={<LogOut className="w-4 h-4" />}
+            title="Sair do sistema"
+          >
+            <span className="hidden md:inline">Sair</span>
           </Botao>
-        </div>
+        )}
       </div>
     </header>
+  );
+}
+
+export function EstadoVazio({
+  titulo = 'Nenhum registro encontrado',
+  descricao = 'Não há itens para exibir no momento.',
+}: {
+  titulo?: string;
+  descricao?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-10 px-4 border border-dashed border-borda rounded-xl bg-slate-50/50">
+      <div className="w-10 h-10 rounded-full bg-slate-100 text-textoSuave flex items-center justify-center mb-3">
+        <Inbox className="w-5 h-5" />
+      </div>
+      <p className="text-sm font-semibold text-texto">{titulo}</p>
+      <p className="text-xs text-textoSuave mt-1 max-w-sm">{descricao}</p>
+    </div>
+  );
+}
+
+export function EsqueletoBloco({ linhas = 3 }: { linhas?: number }) {
+  return (
+    <div className="animate-pulse flex flex-col gap-3 w-full">
+      {Array.from({ length: linhas }).map((_, i) => (
+        <div
+          key={i}
+          className="h-12 bg-slate-200/70 rounded-lg w-full"
+        />
+      ))}
+    </div>
+  );
+}
+
+export function AvisoConfirmacao({ mensagem }: { mensagem: string | null }) {
+  if (!mensagem) return null;
+
+  return (
+    <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-texto text-white text-xs font-medium px-4 py-3 rounded-xl shadow-lg transition-all duration-200">
+      <CheckCircle2 className="w-4 h-4 text-sucesso shrink-0" />
+      <span>{mensagem}</span>
+    </div>
   );
 }

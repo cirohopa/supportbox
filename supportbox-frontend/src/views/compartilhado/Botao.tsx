@@ -53,7 +53,8 @@ export function Botao({
       ) : (
         icone && <span className="shrink-0">{icone}</span>
       )}
-      <span>{children}</span>
+      {/* inline-flex: ícones passados junto com o texto ficam na mesma linha */}
+      <span className="inline-flex items-center gap-2">{children}</span>
     </button>
   );
 }

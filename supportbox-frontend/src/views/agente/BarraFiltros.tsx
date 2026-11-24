@@ -1,24 +1,24 @@
 /**
- * Barra de filtros usada no painel do agente.
+- Barra de filtros usada no painel do agente.
  *
- * Reúne o campo de busca por palavra e as abas de situação. O
- * componente não filtra a lista de chamados por conta própria.
- * Ele só recebe os valores atuais e dispara as funções recebidas
- * quando o usuário interage. A filtragem acontece no PainelAgente,
- * que é quem detém a lista.
+- Reúne o campo de busca por palavra e as abas de situação. O
+- componente não filtra a lista de chamados por conta própria.
+- Ele só recebe os valores atuais e dispara as funções recebidas
+- quando o usuário interage. A filtragem acontece no PainelAgente,
+- que é quem detém a lista.
  *
- * Esse modelo de estado controlado por fora deixa a barra simples
- * e fácil de testar. Para mostrar a barra com qualquer combinação
- * de termo de busca e aba ativa, basta passar os valores como prop.
+- Esse modelo de estado controlado por fora deixa a barra simples
+- e fácil de testar. Para mostrar a barra com qualquer combinação
+- de termo de busca e aba ativa, basta passar os valores como prop.
  */
 "use client";
 
 import { Search } from "lucide-react";
 
 /**
- * Conjunto de filtros de situação aceitos. O valor todos significa
- * que nenhum filtro foi aplicado por situação. Os outros valores
- * coincidem com os possíveis status do chamado.
+- Conjunto de filtros de situação aceitos. O valor todos significa
+- que nenhum filtro foi aplicado por situação. Os outros valores
+- coincidem com os possíveis status do chamado.
  */
 export type AbaStatus = "todos" | "Aberto" | "Em Andamento" | "Concluído";
 
@@ -34,9 +34,9 @@ interface PropsBarraFiltros {
 }
 
 /**
- * Lista das abas exibidas, com o valor que vai para o filtro e o
- * rótulo mostrado ao usuário. Manter a lista em uma constante
- * facilita ajustar nomes ou ordem sem mexer no JSX.
+- Lista das abas exibidas, com o valor que vai para o filtro e o
+- rótulo mostrado ao usuário. Manter a lista em uma constante
+- facilita ajustar nomes ou ordem sem mexer no JSX.
  */
 const ABAS: { valor: AbaStatus; rotulo: string }[] = [
   { valor: "todos", rotulo: "Todos" },
@@ -84,7 +84,7 @@ export function BarraFiltros({
               className={[
                 "flex-1 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-marca sm:flex-none",
                 ativa
-                  ? "bg-papel text-tinta shadow-sm"
+                  ? "bg-marca text-white shadow-sm"
                   : "text-tintaFraca hover:bg-papel/70 hover:text-tinta",
               ].join(" ")}
             >

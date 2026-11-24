@@ -6,14 +6,16 @@ export interface PropsBotao extends React.ButtonHTMLAttributes<HTMLButtonElement
   tamanho?: 'sm' | 'md' | 'lg';
   carregando?: boolean;
   icone?: React.ReactNode;
+  larguraTotal?: boolean;
 }
 
-export default function Botao({
+export function Botao({
   children,
   variante = 'primario',
   tamanho = 'md',
   carregando = false,
   icone,
+  larguraTotal = false,
   disabled,
   className = '',
   ...props
@@ -41,7 +43,9 @@ export default function Botao({
   return (
     <button
       disabled={disabled || carregando}
-      className={`${estilosBase} ${estilosVariante[variante]} ${estilosTamanho[tamanho]} ${className}`}
+      className={`${estilosBase} ${estilosVariante[variante]} ${estilosTamanho[tamanho]} ${
+        larguraTotal ? 'w-full' : ''
+      } ${className}`}
       {...props}
     >
       {carregando ? (
@@ -53,3 +57,5 @@ export default function Botao({
     </button>
   );
 }
+
+export default Botao;

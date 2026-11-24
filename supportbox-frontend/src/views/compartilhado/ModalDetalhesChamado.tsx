@@ -93,8 +93,10 @@ export function ModalDetalhesChamado({
     // caixa central fecha a janela. A comparação entre target e
     // currentTarget garante que o clique foi mesmo na camada de
     // fundo, e não em um elemento interno que propagou o evento.
+    // O !mt-0 anula a margem que o "space-y" da página dá a cada filho;
+    // sem ele a camada começa 24px abaixo do topo e deixa uma faixa clara.
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      className="fixed inset-0 !mt-0 z-50 flex items-center justify-center p-4 bg-black/40"
       onClick={(e) => e.target === e.currentTarget && aoFechar()}
       role="dialog"
       aria-modal="true"

@@ -38,20 +38,12 @@ export function MenuLateralAgente({
   const emTickets = caminho === "/agente";
   const emDados = caminho === "/agente/dados";
   const emRelatorios = caminho === "/agente/relatorios";
-  const iniciais =
-    nomeUsuario
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((parte) => parte[0])
-      .join("")
-      .toUpperCase() || "AG";
 
   return (
     <aside className="flex w-full flex-shrink-0 flex-col border-b border-linha bg-papel md:h-screen md:w-64 md:border-b-0 md:border-r">
       <div className="flex items-center gap-3 border-b border-linha px-5 py-4">
         <Image
-          src="/logo-supportbox.png"
+          src="/logo-supportbox-icone.png"
           alt=""
           width={512}
           height={453}
@@ -112,8 +104,14 @@ export function MenuLateralAgente({
 
       <div className="flex items-center justify-between gap-2 border-t border-linha p-3 md:block md:space-y-2">
         <div className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-2 md:border md:border-linha md:bg-fundo md:px-3">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
-            {iniciais}
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 p-1.5">
+            <Image
+              src="/icon-generico-pessoa.png"
+              alt=""
+              width={512}
+              height={512}
+              className="h-full w-full object-contain"
+            />
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium text-tinta">

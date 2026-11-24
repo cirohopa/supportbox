@@ -12,7 +12,7 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, LoaderCircle, LogIn } from "lucide-react";
-import { Botao } from "@/views/compartilhado/Botao";
+import Botao from "@/views/compartilhado/Botao";
 import { CampoTexto } from "@/views/compartilhado/CampoTexto";
 
 interface PropsFormularioLogin {

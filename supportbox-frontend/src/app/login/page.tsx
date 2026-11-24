@@ -45,16 +45,15 @@ export default function PaginaLogin() {
   return (
     <main className="grid min-h-screen bg-fundo md:grid-cols-2">
       <section className="flex min-h-[34vh] flex-col justify-between bg-slate-950 px-6 py-8 text-white sm:px-10 md:min-h-screen md:px-12 md:py-12">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center">
           <Image
-            src="/logo-supportbox.png"
-            alt=""
-            width={512}
-            height={453}
+            src="/logo-titulo-login.png"
+            alt="SupportBox"
+            width={777}
+            height={245}
             priority
-            className="h-12 w-12 rounded-xl bg-white p-1.5 object-contain"
+            className="h-25 w-auto"
           />
-          <span className="text-lg font-semibold tracking-tight">SupportBox</span>
         </div>
         <div className="mt-8 max-w-lg md:mb-12">
           <p className="mb-3 text-sm font-medium uppercase tracking-[0.16em] text-orange-300">

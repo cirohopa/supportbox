@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { LogOut, Inbox, CheckCircle2 } from 'lucide-react';
 import Botao from './Botao';
 
@@ -40,9 +41,14 @@ export function Cabecalho({
   return (
     <header className="w-full bg-superficie border-b border-borda px-6 py-3 flex items-center justify-between no-print">
       <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-marca text-white font-bold flex items-center justify-center text-sm shadow-sm">
-          SB
-        </div>
+        <Image
+          src="/logo-supportbox-icone.png"
+          alt=""
+          width={160}
+          height={160}
+          className="w-8 h-8"
+          priority
+        />
         <div>
           <span className="font-bold text-texto text-base tracking-tight">
             SupportBox

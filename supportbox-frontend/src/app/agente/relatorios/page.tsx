@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Botao } from "@/views/compartilhado/Botao";
+import  Botao  from "@/views/compartilhado/Botao";
 import { CampoTexto } from "@/views/compartilhado/CampoTexto";
 import ResultadoRelatorio from "@/views/agente/ResultadoRelatorio";
 import { lerSessao } from "@/lib/sessao";

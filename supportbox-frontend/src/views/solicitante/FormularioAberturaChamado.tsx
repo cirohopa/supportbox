@@ -12,7 +12,7 @@
 
 import { useState } from "react";
 import { Send, Sparkles } from "lucide-react";
-import { Botao } from "@/views/compartilhado/Botao";
+import Botao from "@/views/compartilhado/Botao";
 import { CampoTexto } from "@/views/compartilhado/CampoTexto";
 import { CampoTextoArea } from "@/views/compartilhado/CampoTextoArea";
 import { CampoSelect } from "@/views/compartilhado/CampoSelect";

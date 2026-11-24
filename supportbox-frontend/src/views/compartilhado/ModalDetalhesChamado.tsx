@@ -101,7 +101,7 @@ export function ModalDetalhesChamado({
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-papel border border-linha rounded-md shadow">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white border border-linha rounded-md shadow">
         {/*
           Cabeçalho da janela. Mostra o protocolo, o título do
           chamado e o botão de fechar no canto direito.
@@ -130,7 +130,7 @@ export function ModalDetalhesChamado({
           o chamado já tem agente atribuído, aparece uma linha extra
           com esse nome.
         */}
-        <div className="p-5 border-b border-linha grid grid-cols-2 gap-4 bg-fundo/60">
+        <div className="p-5 border-b border-linha grid grid-cols-2 gap-4 bg-slate-50">
           <Metadado titulo="Solicitante" icone={<User className="w-4 h-4" />}>
             {chamado.solicitante}
           </Metadado>
@@ -201,7 +201,7 @@ export function ModalDetalhesChamado({
           mensagem indicando o encerramento. Caso contrário, a área
           de comentário e os botões de ação aparecem normalmente.
         */}
-        <div className="p-5 border-t border-linha bg-fundo/60">
+        <div className="p-5 border-t border-linha bg-slate-50">
           {concluido ? (
             <p className="text-sm text-emerald-700 flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />

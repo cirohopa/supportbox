@@ -25,8 +25,10 @@ import {
   adicionarComentario,
   analisarChamado,
   detalharChamado,
+  ErroApi,
   listarChamados,
   listarComentarios,
+  sair as sairApi,
   type TriagemApi,
 } from "@/lib/api";
 import { paraDetalhado, paraResumo } from "@/lib/mapeamento";
@@ -52,7 +54,7 @@ export default function PaginaSolicitante() {
   useEffect(() => {
     const s = lerSessao();
     if (!s) {
-      router.replace("/login");
+      router.replace("/login?expirou=1");
       return;
     }
     setSessao(s);
@@ -110,10 +112,20 @@ export default function PaginaSolicitante() {
     }
   };
 
-  /** Sair: apaga a sessão e volta para a entrada. */
-  const sair = () => {
-    limparSessao();
-    router.push("/login");
+  /** Notifica o backend, apaga a sessão e volta para a entrada. */
+  const sair = async () => {
+    let expirou = false;
+    try {
+      await sairApi(sessao);
+    } catch (e) {
+      expirou = e instanceof ErroApi && e.status === 401;
+      if (!expirou) {
+        alert(e instanceof Error ? e.message : "Não foi possível sair.");
+      }
+    } finally {
+      limparSessao();
+    }
+    if (!expirou) router.replace("/login");
   };
 
   return (

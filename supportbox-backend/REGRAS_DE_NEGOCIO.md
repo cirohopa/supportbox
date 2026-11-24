@@ -63,7 +63,9 @@ Campos obrigatorios ao abrir um chamado:
 | categoria   | Hardware, Software, Acesso ou Rede    |
 | tipo        | incidente ou solicitacao              |
 
-- **Prioridade inicial** padrao = **Media**. O agente pode reclassificar.
+- **Prioridade inicial**: a sugerida pela triagem por IA, quando o
+  solicitante usa "Analisar com IA"; sem sugestao valida, o padrao e
+  **Media**. O agente pode reclassificar.
 - **Protocolo** gerado automaticamente no formato `CH-AAAA-NNN`,
   sequencial por ano e imutavel.
 
@@ -92,6 +94,10 @@ isso, nao ha como reconstruir o que aconteceu.
 - O cronometro pausa enquanto o chamado aguarda resposta do solicitante.
 - Chamados que estouraram o SLA recebem sinalizacao visual na tabela
   do agente.
+
+> **Nesta versao:** esta implementado o prazo de **resolucao**, contado em
+> dias uteis (segunda a sexta) e gravado no chamado (`prazo_em`). Ficam
+> para depois: o prazo de 1a resposta, a pausa do cronometro e os feriados.
 
 *Motivo:* sem SLA, "Alta prioridade" vira so um rotulo. E a regra que
 mais aproxima o sistema de uma ferramenta de mercado.

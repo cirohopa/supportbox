@@ -1,0 +1,990 @@
+==============================================================
+   MISSÃO PARA A BANCA (26/11): ITENS 1, 2 E 3
+   + FRONTEND MODERNO, ELEGANTE E PROFISSIONAL
+==============================================================
+
+O professor pediu duas coisas para a banca:
+
+   1. Implementar os três primeiros "próximos passos" que
+      prometemos no último slide da apresentação de 01/10:
+
+         ITEM 1  AUTENTICAÇÃO REAL
+                 Login com senha e sessão, no lugar dos
+                 cabeçalhos de identificação.
+
+         ITEM 2  HISTÓRICO AUTOMÁTICO
+                 Comentário do Sistema a cada mudança de
+                 status, prioridade ou responsável.
+
+         ITEM 3  SLA E PRAZOS
+                 Prazo por prioridade e alerta quando o
+                 atendimento estoura o tempo.
+
+   2. Caprichar no frontend: um sistema moderno, elegante e
+      bem profissional.
+
+QUEM FAZ O QUÊ
+
+   GABRIEL   backend: login, sessão e as mudanças na
+             camada de Service (histórico e prazo)
+   CIRO      backend: banco de dados, usuários, senhas e o
+             cálculo do prazo
+   ISAAC     frontend: login, sessão, a fila de Tickets e o
+             alerta de prazo
+   RENATA    frontend: o guia visual, o histórico, o portal do
+             solicitante, o Painel de Dados e os Relatórios
+
+Os quatro trabalham em paralelo. O que permite isso é o
+CONTRATO da Parte 2: os nomes combinados antes de programar.
+Ninguém muda um nome do contrato sem avisar no grupo.
+
+Cada tarefa tem o formato de sempre:
+
+   O QUE É        o que vai ser feito
+   POR QUÊ        o motivo da escolha
+   PROMPT         texto pronto para colar na IA
+   PRONTO QUANDO  como saber que terminou
+
+Sobre usar IA: vão parte por parte, confiram cada pedaço antes
+de seguir, e só deem como pronto o que vocês conseguem
+explicar. Na banca, quem fez explica.
+
+
+==============================================================
+   CRONOGRAMA
+==============================================================
+
+   Sáb 07/11  Gabriel: tipos novos no dominio.ts (primeira
+              coisa, todo mundo depende deles)
+              Ciro: migração do banco e usuários de teste
+
+   Ter 10/11  BACKEND PRONTO (Gabriel e Ciro), na main
+
+   Qua 11/11  Meet: testar o login de verdade, juntos
+
+   Sex 13/11  Frontend dos itens 1, 2 e 3 funcionando
+
+   Seg 16/11  Redesign completo das telas
+
+   Qua 18/11  Meet: teste de ponta a ponta (Parte 5)
+
+   Qui 19/11  CÓDIGO CONGELADO. A partir daqui, só correção
+              de erro. Nada de funcionalidade nova.
+
+Os ensaios da apresentação continuam em paralelo. A
+demonstração final passa a ser ensaiada com o sistema novo a
+partir do dia 18/11.
+
+
+==============================================================
+   REGRAS DO GIT PARA ESTA MISSÃO
+==============================================================
+
+   1. Antes de começar, atualizem a branch de vocês com a
+      main mais recente.
+   2. Cada um trabalha SÓ na sua branch e SÓ nos arquivos que
+      são seus (a lista está em cada parte).
+   3. Pronto = pull request para a main. O Ciro integra.
+   4. Antes de cada commit, confiram o git status: o .env
+      NUNCA vai para o GitHub.
+
+
+==============================================================
+   PARTE 1 - O QUE VAMOS CONSTRUIR, EM LINGUAGEM SIMPLES
+==============================================================
+
+ITEM 1 - AUTENTICAÇÃO REAL
+--------------------------
+
+Como é hoje: a tela de login ignora a senha, e cada
+requisição diz ao backend "eu sou fulano, sou agente". O
+backend acredita.
+
+Como vai ficar:
+
+   1. Existe uma tabela de USUÁRIOS no banco, com nome,
+      e-mail, papel e a senha guardada de forma protegida
+      (nunca a senha em si).
+   2. Na tela de login, a pessoa digita e-mail e senha. O
+      backend confere e, se estiver certo, devolve um TOKEN:
+      um "crachá" assinado pelo servidor, válido por 8 horas.
+   3. O frontend guarda esse token e o envia em toda
+      requisição, no cabeçalho Authorization.
+   4. O backend confere a assinatura do crachá. Se alguém
+      alterar o crachá, a assinatura não bate, e ele é
+      recusado.
+
+Decisões, e o porquê de cada uma:
+
+   * SENHA PROTEGIDA COM O PRÓPRIO NODE (scrypt). Sem
+     biblioteca nova. O banco guarda só um "resumo" da senha,
+     do qual não dá para voltar à senha original. Se o banco
+     vazar, as senhas não vazam.
+
+   * CRACHÁ ASSINADO, E NÃO SESSÃO GUARDADA NO BANCO. O
+     servidor assina o crachá com uma chave secreta do .env.
+     Para conferir, basta refazer a assinatura: não precisa
+     consultar o banco a cada requisição, e o
+     extrairAtor continua simples. É a mesma ideia de um JWT,
+     feita à mão, como o resto do backend.
+
+   * O ID DO USUÁRIO CONTINUA SENDO O E-MAIL. Os chamados já
+     guardam o e-mail do solicitante e do agente. Mantendo
+     assim, nenhum dado antigo precisa ser migrado, e o
+     Telegram continua funcionando como está.
+
+   * MESMA MENSAGEM PARA E-MAIL OU SENHA ERRADOS: "E-mail ou
+     senha inválidos." Dizer qual dos dois está errado
+     ajudaria quem tenta invadir.
+
+   * O TELEGRAM NÃO MUDA. Ele já identifica o agente pelo ID
+     do Telegram, que é garantido pelo próprio Telegram.
+
+Fica de fora (dizer na banca, se perguntarem): bloqueio
+depois de várias tentativas erradas e recuperação de senha
+por e-mail.
+
+
+ITEM 2 - HISTÓRICO AUTOMÁTICO
+-----------------------------
+
+Como é hoje: quando um chamado muda de situação, de
+prioridade ou de responsável, nada fica registrado no
+histórico.
+
+Como vai ficar: a cada mudança, o próprio sistema escreve um
+comentário no histórico, com o autor "Sistema", dizendo quem
+fez e o que mudou. Exemplos:
+
+   Chamado assumido por renata.agente@empresa.com.
+   Situação: Aberto → Em Andamento.
+
+   Prioridade alterada de Média para Alta por
+   ciro.agente@empresa.com.
+
+Decisões, e o porquê:
+
+   * QUEM ESCREVE É O SERVICE. A regra está no Service, então
+     vale para o site E para o Telegram ao mesmo tempo. Fechar
+     um chamado pelo bot também gera o registro, sem uma
+     linha a mais no TelegramController.
+   * O "QUANDO" já vem de graça: todo comentário tem data.
+   * Esse comentário é imutável como os outros. Ninguém
+     consegue apagar.
+
+
+ITEM 3 - SLA E PRAZOS
+---------------------
+
+Como é hoje: "prioridade alta" é só um rótulo.
+
+Como vai ficar: cada chamado ganha um PRAZO de resolução,
+calculado pela prioridade, em dias úteis:
+
+   ALTA    1 dia útil
+   MÉDIA   3 dias úteis
+   BAIXA   5 dias úteis
+
+Exemplo: aberto numa sexta às 15h, prioridade média. Contam
+segunda, terça e quarta: o prazo é quarta às 15h.
+
+Na tela, cada chamado mostra quanto tempo falta ou, se passou
+do prazo, um alerta vermelho "Atrasado".
+
+Decisões, e o porquê:
+
+   * O PRAZO É CALCULADO NO BACKEND e gravado no chamado
+     (coluna prazo_em). Calcular o prazo é regra de negócio,
+     então mora no Service.
+   * A TELA SÓ COMPARA O PRAZO COM O RELÓGIO para pintar
+     "Atrasado". Isso é exibição, não regra.
+   * QUANDO O PRAZO MUDA:
+        ao abrir             conta a partir da abertura
+        ao mudar prioridade  recalcula a partir da abertura
+        ao reabrir           recalcula a partir de agora
+   * DIAS ÚTEIS = segunda a sexta.
+
+Fica de fora (dizer na banca, se perguntarem): feriados, o
+prazo de PRIMEIRA resposta e a pausa do cronômetro enquanto
+se espera o solicitante. São evoluções do SLA.
+
+
+==============================================================
+   PARTE 2 - O CONTRATO (OS NOMES COMBINADOS)
+==============================================================
+
+--------------------------------------------------------------
+2.1 BANCO DE DADOS (Ciro cria)
+--------------------------------------------------------------
+
+   TABELA NOVA: usuarios
+      id          uuid  chave primária (gerada pelo banco)
+      nome        text  obrigatório
+      email       text  obrigatório, ÚNICO
+      senha_hash  text  obrigatório
+      papel       text  'solicitante' ou 'agente'
+      criado_em   timestamptz  padrão now()
+
+   COLUNA NOVA em chamados:
+      prazo_em    timestamptz  (pode ser nula nos antigos)
+
+
+--------------------------------------------------------------
+2.2 TIPOS NOVOS NO dominio.ts (Gabriel escreve no SÁBADO)
+--------------------------------------------------------------
+
+   export type Usuario = {
+     id: string;
+     nome: string;
+     email: string;
+     papel: Papel;
+     criadoEm: Date;
+   };
+
+   // O que o login devolve. Nunca inclui a senha.
+   export type UsuarioPublico = {
+     email: string;
+     nome: string;
+     papel: Papel;
+   };
+
+   E no type Chamado, um campo novo:
+
+     prazoEm: Date | null;   // prazo de resolucao (regra 6)
+
+
+--------------------------------------------------------------
+2.3 FUNÇÕES DO BACKEND (quem escreve e quem usa)
+--------------------------------------------------------------
+
+   src/utils/senha.ts                        CIRO escreve
+      gerarHashSenha(senha: string): Promise<string>
+      conferirSenha(senha: string, hash: string): Promise<boolean>
+
+   src/dao/UsuariosDAO.ts                    CIRO escreve
+      buscarPorEmail(email: string): Promise<(Usuario & { senhaHash: string }) | null>
+      criar(dados: { nome; email; senhaHash; papel }): Promise<Usuario>
+
+   src/services/prazos.ts                    CIRO escreve
+      calcularPrazo(inicio: Date, prioridade: Prioridade): Date
+
+   src/utils/token.ts                        GABRIEL escreve
+      gerarToken(usuario: UsuarioPublico): string
+      lerToken(token: string): Ator | null
+
+   src/services/AuthService.ts               GABRIEL escreve
+      entrar(email: unknown, senha: unknown):
+         Promise<{ token: string; usuario: UsuarioPublico }>
+      quemSou(ator: Ator): Promise<UsuarioPublico>
+
+   src/erros.ts                              GABRIEL acrescenta
+      export class ErroNaoAutenticado extends Error {}   // vira 401
+
+   Variável nova no .env (e documentada no .env.example):
+      SESSAO_SEGREDO=   uma frase longa e aleatória. Sem ela, o
+                        backend não sobe (igual à chave da IA).
+
+
+--------------------------------------------------------------
+2.4 A API, PARA O FRONTEND (Gabriel garante)
+--------------------------------------------------------------
+
+LOGIN
+
+   POST /api/auth/login
+   corpo:    { "email": "renata@empresa.com", "senha": "..." }
+
+   200:      { "token": "eyJ...", "usuario": { "email": "renata@empresa.com",
+               "nome": "Renata Esther", "papel": "agente" } }
+   400:      { "erro": "Informe e-mail e senha." }
+   401:      { "erro": "E-mail ou senha inválidos." }
+
+QUEM SOU EU (para conferir se o token ainda vale)
+
+   GET /api/auth/me      → 200 { email, nome, papel }  ou  401
+
+SAIR
+
+   POST /api/auth/logout → 204 (o frontend apaga o token de
+                           qualquer jeito)
+
+TODAS AS OUTRAS ROTAS
+
+   Os cabeçalhos X-Usuario-Id e X-Usuario-Papel DEIXAM DE
+   EXISTIR. No lugar, vai um só:
+
+      Authorization: Bearer <token>
+
+   Sem token, token alterado ou token vencido (8 horas):
+   401 { "erro": "Sessão inválida ou expirada." }
+
+   Em QUALQUER 401, o frontend apaga a sessão e volta para o
+   login com o aviso "Sua sessão expirou. Entre novamente."
+
+CHAMADOS
+
+   Todo chamado devolvido pela API ganha um campo:
+
+      "prazoEm": "2026-11-18T18:00:00.000Z"    (ou null)
+
+COMENTÁRIOS
+
+   Nada muda no formato. Os comentários automáticos são os
+   que têm:
+
+      "autor": "Sistema"
+
+
+--------------------------------------------------------------
+2.5 FRONTEND: OS NOMES ENTRE ISAAC E RENATA
+--------------------------------------------------------------
+
+O Isaac escreve no src/lib (é o dono), primeira coisa:
+
+   // sessao.ts - o id continua sendo o e-mail
+   export interface Sessao {
+     id: string;
+     nome: string;
+     papel: PapelUsuario;
+     token: string;
+   }
+
+   // api.ts
+   entrar(email: string, senha: string): Promise<Sessao>
+   sair(sessao: Sessao): Promise<void>
+   e o campo prazoEm: string | null em ChamadoApi e
+   ChamadoResumo
+
+O Isaac cria o componente do prazo, que os dois usam:
+
+   src/views/agente/EtiquetaPrazo.tsx
+   <EtiquetaPrazo prazoEm={chamado.prazoEm} status={chamado.status} />
+
+      concluído                  → não mostra nada
+      sem prazo (chamado antigo) → não mostra nada
+      faltando mais de 24h       → neutro:   "Vence em 2 dias"
+      faltando menos de 24h      → atenção:  "Vence em 5h"
+      passou do prazo            → vermelho: "Atrasado"
+
+
+==============================================================
+   PARTE 3 - GABRIEL E CIRO: BACKEND
+==============================================================
+
+QUEM MEXE EM QUÊ
+
+   GABRIEL  dominio.ts, erros.ts, utils/http.ts (o 401),
+            utils/token.ts, utils/ator.ts, AuthService.ts,
+            AuthController.ts, ChamadosService.ts, .env.example
+   CIRO     banco/ (migração e schema), utils/senha.ts,
+            dao/UsuariosDAO.ts, dao/ChamadosDAO.ts,
+            services/prazos.ts, scripts/criarUsuario.ts,
+            package.json
+
+O único arquivo que os dois usam é o dominio.ts, que o Gabriel
+escreve no sábado e o Ciro só importa.
+
+
+--------------------------------------------------------------
+TAREFA C1 - MIGRAÇÃO DO BANCO                         CIRO
+--------------------------------------------------------------
+
+O QUE É
+   Criar a tabela usuarios e a coluna prazo_em, no banco do
+   grupo e no schema.sql.
+
+POR QUÊ
+   O login precisa saber quem existe e qual a senha. O prazo
+   precisa ficar gravado no chamado.
+
+PROMPT
+   "No projeto supportbox-backend (Node + TypeScript + pg,
+   sem ORM, SQL escrito à mão), crie o arquivo
+   banco/migracao-novembro.sql e atualize o banco/schema.sql.
+
+   1. Tabela usuarios: id uuid PRIMARY KEY DEFAULT
+      gen_random_uuid(), nome text NOT NULL, email text NOT
+      NULL UNIQUE, senha_hash text NOT NULL, papel text NOT
+      NULL CHECK (papel IN ('solicitante','agente')),
+      criado_em timestamptz NOT NULL DEFAULT now().
+   2. Na tabela chamados: ADD COLUMN IF NOT EXISTS prazo_em
+      timestamptz.
+   3. Preencha o prazo_em dos chamados que já existem:
+      criado_em + 1 dia (alta), 3 dias (media) e 5 dias
+      (baixa). Para dados antigos, dias corridos bastam.
+   4. Tudo com IF NOT EXISTS, para poder rodar de novo sem
+      erro.
+   Siga o estilo de comentários do schema.sql atual."
+
+PRONTO QUANDO
+   A migração roda duas vezes seguidas sem erro, e um SELECT
+   mostra a tabela usuarios vazia e os chamados com prazo_em.
+
+
+--------------------------------------------------------------
+TAREFA C2 - SENHAS E USUÁRIOS                         CIRO
+--------------------------------------------------------------
+
+O QUE É
+   As funções que protegem a senha, a DAO de usuários e um
+   comando para cadastrar usuários.
+
+POR QUÊ
+   Sem tela de cadastro (fica fora do escopo), os usuários
+   são criados por um comando no terminal.
+
+PROMPT
+   "No supportbox-backend, sem biblioteca nova, só com o
+   módulo crypto do Node:
+
+   1. src/utils/senha.ts com gerarHashSenha(senha) e
+      conferirSenha(senha, hash), usando scrypt com um salt
+      aleatório de 16 bytes. Guarde no formato 'salt:hash' em
+      hexadecimal. Para comparar, use timingSafeEqual.
+   2. src/dao/UsuariosDAO.ts, no mesmo estilo do ChamadosDAO
+      (função paraUsuario convertendo snake_case para
+      camelCase): buscarPorEmail(email) devolvendo o usuário
+      com o senhaHash, ou null; e criar(dados).
+   3. src/scripts/criarUsuario.ts, rodado assim:
+         npm run criar-usuario -- email senha papel "Nome"
+      Ele confere se o papel é válido e se a senha tem ao
+      menos 6 caracteres, gera o hash e grava pela
+      UsuariosDAO. Acrescente no package.json:
+         "criar-usuario": "tsx src/scripts/criarUsuario.ts"
+   Os tipos Usuario e Papel vêm do dominio.ts."
+
+PRONTO QUANDO
+   O comando cria um usuário, e o banco mostra o senha_hash
+   no formato salt:hash, nunca a senha.
+
+DEPOIS: cadastrar os usuários da demonstração. Combinem os
+e-mails no grupo. O agente da Renata precisa ser o MESMO
+e-mail que está ligado ao Telegram do Gabriel no
+TELEGRAM_AGENTES.
+
+
+--------------------------------------------------------------
+TAREFA C3 - O CÁLCULO DO PRAZO                        CIRO
+--------------------------------------------------------------
+
+O QUE É
+   A função que diz quando um chamado vence, e a coluna
+   prazo_em na ChamadosDAO.
+
+POR QUÊ
+   O cálculo fica num arquivo próprio para poder ser testado
+   sozinho e usado pelo Service.
+
+PROMPT
+   "No supportbox-backend:
+
+   1. Crie src/services/prazos.ts com
+         calcularPrazo(inicio: Date, prioridade: Prioridade): Date
+      Dias úteis por prioridade: alta 1, media 3, baixa 5.
+      Some um dia de cada vez a partir de inicio, pulando
+      sábado e domingo, mantendo o mesmo horário. Não altere
+      a data recebida: trabalhe numa cópia. Exemplo: sexta
+      15h + 3 dias úteis = quarta 15h.
+   2. Na src/dao/ChamadosDAO.ts: acrescente prazoEm em
+      DadosCriarChamado e grave prazo_em no INSERT; grave
+      prazo_em no UPDATE do método atualizar; e leia prazo_em
+      na função paraChamado (prazoEm: Date ou null).
+   A DAO não calcula nada: só grava e lê o que recebe."
+
+PRONTO QUANDO
+   Testando no terminal: sexta 15h com media dá quarta 15h,
+   e quinta 10h com alta dá sexta 10h.
+
+
+--------------------------------------------------------------
+TAREFA G1 - TIPOS, ERRO 401 E O CRACHÁ             GABRIEL
+--------------------------------------------------------------
+
+O QUE É
+   Os tipos do contrato, o erro de "não autenticado" e as
+   funções que criam e conferem o token.
+
+POR QUÊ
+   É a base de que todo mundo depende. Por isso sai primeiro,
+   no sábado.
+
+PROMPT
+   "No supportbox-backend:
+
+   1. No src/dominio.ts, acrescente os types Usuario e
+      UsuarioPublico e o campo prazoEm: Date | null no
+      Chamado (veja o contrato).
+   2. No src/erros.ts, acrescente ErroNaoAutenticado, e no
+      src/utils/http.ts faça o responderErro devolver 401 para
+      ele.
+   3. Crie src/utils/token.ts, só com o módulo crypto do Node:
+      gerarToken(usuario) monta um conteúdo { id: email,
+      nome, papel, exp } (exp = agora + 8 horas), converte para
+      base64url e assina com HMAC SHA-256 usando
+      process.env.SESSAO_SEGREDO. O token é
+      'conteudo.assinatura'. lerToken(token) refaz a
+      assinatura, compara com timingSafeEqual, confere a
+      validade e devolve o Ator { id, papel }, ou null.
+   4. Se SESSAO_SEGREDO não existir, o backend não sobe, com
+      mensagem clara, igual ao ia.ts. Documente no
+      .env.example."
+
+PRONTO QUANDO
+   Um token gerado é lido de volta; um token com um caractere
+   trocado devolve null; um token vencido devolve null.
+
+
+--------------------------------------------------------------
+TAREFA G2 - O LOGIN DE VERDADE                     GABRIEL
+--------------------------------------------------------------
+
+O QUE É
+   O AuthService, o AuthController (que hoje responde 501) e
+   a troca dos cabeçalhos pelo token.
+
+POR QUÊ
+   É o item 1. E, como o extrairAtor muda, todos os
+   Controllers passam a exigir login sem mudar uma linha.
+
+PROMPT
+   "No supportbox-backend:
+
+   1. Crie src/services/AuthService.ts:
+      entrar(email, senha) valida que os dois vieram (senão
+      ErroValidacao 'Informe e-mail e senha.'), busca pela
+      UsuariosDAO.buscarPorEmail, confere com conferirSenha.
+      Se o usuário não existir OU a senha estiver errada,
+      lança ErroNaoAutenticado 'E-mail ou senha inválidos.'
+      (a mesma mensagem nos dois casos). Se der certo, devolve
+      { token: gerarToken(...), usuario: { email, nome, papel } }.
+      quemSou(ator) devolve o UsuarioPublico do ator.
+   2. Reescreva o src/controllers/AuthController.ts: login
+      (200), me (200 ou 401) e logout (204). Mantenha o padrão
+      dos outros Controllers.
+   3. Em src/utils/ator.ts, troque os cabeçalhos X-Usuario-*
+      pelo cabeçalho Authorization: 'Bearer <token>', lido com
+      lerToken. Sem token válido, devolve null (os Controllers
+      já respondem 401)."
+
+PRONTO QUANDO
+   Com o curl: login certo devolve token; senha errada dá
+   401; GET /api/chamados sem token dá 401 e com o token
+   funciona.
+
+
+--------------------------------------------------------------
+TAREFA G3 - HISTÓRICO E PRAZO NO SERVICE           GABRIEL
+--------------------------------------------------------------
+
+O QUE É
+   O ChamadosService passa a escrever no histórico a cada
+   mudança e a calcular o prazo.
+
+POR QUÊ
+   São os itens 2 e 3, e regra de negócio mora no Service.
+   Assim valem para o site e para o Telegram de uma vez.
+
+PROMPT
+   "No src/services/ChamadosService.ts do supportbox-backend:
+
+   1. O construtor passa a receber também a ComentariosDAO:
+      constructor(private dao = new ChamadosDAO(),
+                  private comentarios = new ComentariosDAO())
+   2. Crie um método privado registrarHistorico(chamadoId,
+      texto), que grava um comentário com autor 'Sistema'.
+   3. Depois de cada atualização com sucesso, registre:
+      assumir:  'Chamado assumido por <email>. Situação:
+                 Aberto → Em Andamento.'
+      concluir: 'Chamado concluído por <email>.'
+      reabrir:  'Chamado reaberto por <email>. Situação:
+                 Concluído → Em Andamento.'
+      reatribuir: 'Responsável alterado de <antigo> para
+                 <novo> por <email>.'
+      alterarPrioridade: 'Prioridade alterada de <Antiga>
+                 para <Nova> por <email>.'
+      Use rótulos legíveis: 'Em Andamento', 'Média'.
+   4. Prazo, com calcularPrazo de services/prazos.ts:
+      abrir: prazo a partir de agora, com a prioridade final;
+      alterarPrioridade: recalcula a partir de criadoEm;
+      reabrir: recalcula a partir de agora.
+   Não mexa nas regras que já existem."
+
+PRONTO QUANDO
+   Assumir, concluir e mudar a prioridade de um chamado deixa
+   três comentários do 'Sistema' no histórico, e o prazoEm
+   muda junto com a prioridade. Concluir pelo Telegram também
+   gera o comentário.
+
+SE SOBRAR TEMPO (opcional):
+   * No reatribuir, conferir pela UsuariosDAO que o novo
+     responsável existe e é agente. Isso fecha uma lacuna que
+     o README cita na regra 2.
+   * No TelegramController, avisar no log quando um e-mail
+     da agenda não existir como agente na tabela usuarios.
+
+
+==============================================================
+   PARTE 4 - ISAAC E RENATA: FRONTEND
+==============================================================
+
+--------------------------------------------------------------
+4.1 O PEDIDO DO PROFESSOR: MODERNO, ELEGANTE E PROFISSIONAL
+--------------------------------------------------------------
+
+Este é o recado mais importante desta parte: A BANCA VAI
+JULGAR O SISTEMA PELO QUE ELA VÊ. Um backend perfeito com uma
+tela simples parece trabalho inacabado. A meta é que o
+SupportBox pareça um produto de verdade, do nível de um Jira
+Service Management, de um Zendesk ou do painel da Vercel:
+limpo, consistente e caprichado nos detalhes.
+
+"Profissional" não é ter mais coisa na tela. É ter MENOS
+coisa, mais bem organizada. As quatro palavras de ordem:
+
+   CONSISTÊNCIA   o mesmo botão, a mesma cor, o mesmo
+                  espaçamento em todas as telas
+   RESPIRO        espaço em branco entre os blocos; nada
+                  encostado nas bordas
+   HIERARQUIA     dá para saber o que é mais importante só
+                  de bater o olho
+   ACABAMENTO     carregamento, lista vazia, erro e
+                  confirmação têm uma cara pensada
+
+O GUIA VISUAL (a Renata define primeiro; os dois seguem)
+
+   CORES
+      * O laranja da marca (#FF7000) é a cor de AÇÃO e de
+        destaque: botão principal, item ativo do menu, link.
+        Não usar laranja em fundos grandes.
+      * Base em cinzas neutros (a família "slate" do
+        Tailwind): fundo levemente cinza, cartões brancos,
+        texto escuro, bordas finas e claras.
+      * Cores de estado, sempre com o mesmo significado:
+           verde    concluído, sucesso
+           âmbar    em andamento, atenção, vence logo
+           vermelho erro, atrasado, prioridade alta
+           azul     informação, aberto
+   TIPOGRAFIA
+      * Fonte Inter, carregada pelo next/font/google.
+      * Poucos tamanhos: título de página, título de seção,
+        texto, texto pequeno. Use peso (negrito) para dar
+        importância, não tamanho.
+   FORMAS
+      * Espaçamentos em múltiplos de 4 px (as classes do
+        Tailwind já são assim).
+      * Cantos arredondados de 8 a 12 px, sombras bem
+        sutis e bordas de 1 px.
+   ÍCONES
+      * Só lucide-react, que já está no projeto, sempre no
+        mesmo tamanho e espessura.
+
+   Tudo isso vira cor e nome no tailwind.config.ts e no
+   globals.css, para ninguém escrever código de cor solto nos
+   componentes.
+
+OS DETALHES QUE SEPARAM AMADOR DE PROFISSIONAL
+
+   [ ] Botões com estados: normal, passar o mouse, foco (para
+       teclado), desabilitado e "carregando" (com spinner)
+   [ ] Campos com rótulo, texto de ajuda e mensagem de erro
+       logo abaixo, em vermelho
+   [ ] Etiquetas (badges) iguais em todo lugar para situação,
+       prioridade e prazo
+   [ ] Carregamento com "esqueleto" (blocos cinza piscando),
+       e não a tela em branco
+   [ ] Lista vazia com ícone e uma frase, como "Nenhum
+       chamado por aqui ainda"
+   [ ] Confirmação discreta depois de uma ação, um aviso que
+       aparece e some ("Chamado assumido")
+   [ ] Transições suaves (150 a 200 ms) em hover, modal e
+       menu. Nada de animação exagerada.
+   [ ] Nome e iniciais do usuário logado no menu ou no
+       cabeçalho (agora existe nome de verdade!)
+   [ ] Funciona bem em telas menores (notebook pequeno e
+       tablet), sem barra de rolagem lateral
+   [ ] Contraste bom e foco visível: dá para usar só com o
+       teclado
+
+REGRAS PARA NÃO DAR PROBLEMA PERTO DA BANCA
+
+   * Sem bibliotecas novas de componentes. Tailwind,
+     lucide-react e next/font já resolvem tudo, e cada
+     biblioteca nova é um risco a uma semana da banca.
+   * Mudem a APARÊNCIA, não a lógica. Se uma tela funciona
+     hoje, ela continua chamando a API do mesmo jeito.
+   * A cada tela terminada: testem de novo o fluxo dela.
+
+Inspirem-se, não copiem: olhem as telas do Linear, do Jira
+Service Management e do painel da Vercel antes de começar.
+
+
+--------------------------------------------------------------
+4.2 QUEM MEXE EM QUÊ
+--------------------------------------------------------------
+
+   ISAAC   src/lib/ (api.ts, sessao.ts, mapeamento.ts),
+           app/login + views/auth (login),
+           app/agente/layout.tsx, views/agente/MenuLateralAgente,
+           PainelAgente, TabelaChamados, BarraFiltros,
+           EtiquetaPrazo (novo), app/agente/relatorios/page.tsx
+
+   RENATA  tailwind.config.ts, app/globals.css,
+           app/layout.tsx (a fonte),
+           views/compartilhado/ (Botao, Campos, Etiqueta,
+           Cabecalho, ModalDetalhesChamado),
+           views/solicitante/ e app/solicitante/,
+           app/agente/dados + MoldeCartaoDados + MoldeBarraDados,
+           views/agente/ResultadoRelatorio
+
+   PONTOS DE ENCONTRO:
+      * A Renata usa o EtiquetaPrazo do Isaac dentro do
+        ModalDetalhesChamado.
+      * O Isaac usa o Botao e os Campos da Renata no login.
+      Por isso: a Renata entrega o guia visual e o Botao
+      primeiro, e o Isaac entrega o EtiquetaPrazo primeiro.
+
+
+--------------------------------------------------------------
+TAREFA I1 - LOGIN E SESSÃO DE VERDADE                ISAAC
+--------------------------------------------------------------
+
+O QUE É
+   A tela de login passa a mandar e-mail e senha ao backend,
+   guardar o token e enviá-lo em toda requisição.
+
+POR QUÊ
+   É o item 1 do lado da tela. O papel do usuário agora vem
+   do backend, e não mais da palavra "agente" no e-mail.
+
+PROMPT
+   "No supportbox-frontend (Next.js App Router + TypeScript +
+   Tailwind):
+
+   1. src/lib/sessao.ts: a interface Sessao ganha token:
+      string. O id continua sendo o e-mail.
+   2. src/lib/api.ts: crie entrar(email, senha), que chama
+      POST /api/auth/login e devolve a Sessao (id = email,
+      nome, papel e token), e sair(sessao), que chama
+      POST /api/auth/logout. No requisitar, troque os
+      cabeçalhos X-Usuario-Id e X-Usuario-Papel por
+      Authorization: Bearer <token>. Em qualquer resposta
+      401, apague a sessão e mande para /login?expirou=1.
+   3. Tela de login: usa entrar(). Erro 401 aparece embaixo do
+      formulário: 'E-mail ou senha inválidos.' O botão mostra
+      'Entrando...' enquanto espera. O papel que voltou do
+      backend decide a página (/agente ou /solicitante). Se a
+      URL tiver ?expirou=1, mostre 'Sua sessão expirou. Entre
+      novamente.' Remova o aviso de que a senha é ignorada.
+   4. Os botões 'Sair' chamam sair() e depois limpam a
+      sessão."
+
+PRONTO QUANDO
+   Senha errada mostra o erro; senha certa entra na página
+   certa; apagar o token no navegador e recarregar leva ao
+   login com o aviso de sessão expirada.
+
+
+--------------------------------------------------------------
+TAREFA I2 - O ALERTA DE PRAZO                        ISAAC
+--------------------------------------------------------------
+
+O QUE É
+   O componente EtiquetaPrazo e a coluna de prazo na fila de
+   Tickets.
+
+POR QUÊ
+   É o item 3 do lado da tela: o agente bate o olho e vê o
+   que está atrasado.
+
+PROMPT
+   "No supportbox-frontend: acrescente prazoEm: string | null
+   em ChamadoApi e ChamadoResumo (e no mapeamento.ts). Crie
+   src/views/agente/EtiquetaPrazo.tsx, que recebe prazoEm e
+   status e mostra: nada se concluído ou sem prazo; 'Vence em
+   N dias' (neutro) se faltar mais de 24h; 'Vence em Nh'
+   (âmbar) se faltar menos; 'Atrasado' (vermelho, com ícone
+   de alerta) se já passou. Use as cores do guia visual. Na
+   TabelaChamados, acrescente a coluna 'Prazo' com a
+   EtiquetaPrazo e permita ordenar os atrasados primeiro."
+
+PRONTO QUANDO
+   Um chamado com prazo no passado aparece com 'Atrasado' em
+   vermelho; um concluído não mostra etiqueta.
+
+
+--------------------------------------------------------------
+TAREFA I3 - REDESIGN: LOGIN, MENU E TICKETS          ISAAC
+--------------------------------------------------------------
+
+O QUE É
+   Aplicar o guia visual nas telas do Isaac.
+
+COMO DEVE FICAR
+   LOGIN    tela dividida: de um lado a marca (logo, nome, uma
+            frase sobre o sistema, fundo escuro); do outro, o
+            formulário num cartão branco, com mostrar/ocultar
+            senha.
+   MENU     barra lateral com o logo no topo, itens com ícone,
+            o item ativo destacado em laranja, e embaixo o
+            usuário logado (iniciais, nome, papel) e o Sair.
+   TICKETS  título da página com subtítulo, busca e abas em
+            uma linha, tabela com cabeçalho discreto, linhas
+            com hover, etiquetas padronizadas, esqueleto no
+            carregamento e estado vazio caprichado.
+
+PROMPT
+   "No supportbox-frontend, usando só Tailwind, lucide-react e
+   as cores e componentes do guia visual
+   (tailwind.config.ts), redesenhe a tela de login, o menu
+   lateral do agente e a tela de Tickets para um visual
+   moderno, elegante e profissional, no estilo de painéis
+   como Linear e Jira Service Management. Não altere a lógica
+   nem as chamadas à API: só a aparência. [Descreva aqui como
+   deve ficar, usando o quadro COMO DEVE FICAR acima.]"
+
+PRONTO QUANDO
+   As três telas passam no checklist da 4.1 e todo o fluxo do
+   agente continua funcionando.
+
+
+--------------------------------------------------------------
+TAREFA R1 - O GUIA VISUAL                           RENATA
+--------------------------------------------------------------
+
+O QUE É
+   As cores, a fonte e os componentes básicos que as duas
+   pessoas vão usar. É a PRIMEIRA entrega do frontend.
+
+PROMPT
+   "No supportbox-frontend (Next.js + Tailwind): monte o guia
+   visual do sistema. No tailwind.config.ts, defina as cores
+   com nomes de função: marca (#FF7000 e variações),
+   superfície, borda, texto, texto suave, e as de estado
+   (sucesso, atenção, perigo, info). Carregue a fonte Inter
+   pelo next/font/google no app/layout.tsx. Depois, refaça os
+   componentes de views/compartilhado (Botao com variantes
+   primário, secundário e fantasma, e estados de hover, foco,
+   desabilitado e carregando; os Campos com rótulo, ajuda e
+   erro; a Etiqueta com as variantes de situação e
+   prioridade) para um visual moderno e profissional, sem
+   mudar como eles são usados pelas telas."
+
+PRONTO QUANDO
+   Todas as telas atuais continuam funcionando, já com a fonte
+   e os componentes novos, e o Isaac consegue usar o Botao no
+   login.
+
+
+--------------------------------------------------------------
+TAREFA R2 - O HISTÓRICO NA JANELA DE DETALHES       RENATA
+--------------------------------------------------------------
+
+O QUE É
+   Mostrar os comentários automáticos do "Sistema" de forma
+   diferente dos comentários das pessoas, e o prazo.
+
+POR QUÊ
+   É o item 2 do lado da tela. Sem diferença visual, o
+   histórico vira uma confusão de mensagens.
+
+PROMPT
+   "No ModalDetalhesChamado do supportbox-frontend: mostre o
+   histórico como uma linha do tempo. Comentários com autor
+   'Sistema' aparecem como evento: linha centralizada, texto
+   pequeno e cinza, com um ícone (por exemplo History, da
+   lucide-react) e a data. Comentários de pessoas continuam
+   como balões, com as iniciais do autor. No cabeçalho da
+   janela, ao lado da situação e da prioridade, mostre o
+   <EtiquetaPrazo> do Isaac. Redesenhe a janela para o visual
+   moderno do guia: cabeçalho com protocolo e título,
+   informações em grade, e animação suave ao abrir."
+
+PRONTO QUANDO
+   Assumir um chamado faz aparecer o evento do Sistema no
+   histórico, visualmente diferente dos comentários.
+
+
+--------------------------------------------------------------
+TAREFA R3 - REDESIGN: SOLICITANTE, PAINEL E RELATÓRIOS  RENATA
+--------------------------------------------------------------
+
+COMO DEVE FICAR
+   PORTAL DO SOLICITANTE  formulário num cartão, com as
+            sugestões da IA num painel destacado ("Sugestões
+            para tentar antes de enviar"), com ícone de
+            brilho e passos numerados. "Meus Chamados" em
+            cartões com etiquetas padronizadas.
+   PAINEL DE DADOS  cartões de indicador com ícone, número
+            grande e rótulo pequeno. Um cartão novo:
+            "Atrasados", em vermelho quando for maior que
+            zero.
+   RELATÓRIOS  resultado com cartões de resumo e tabelas
+            limpas; a impressão sai sem o menu lateral.
+
+PROMPT
+   "No supportbox-frontend, usando só Tailwind, lucide-react e
+   o guia visual, redesenhe o portal do solicitante, o Painel
+   de Dados e o resultado dos Relatórios para um visual
+   moderno, elegante e profissional. No Painel de Dados,
+   acrescente o cartão 'Atrasados', contando os chamados não
+   concluídos cujo prazoEm já passou. Não altere as chamadas à
+   API. [Descreva aqui como deve ficar, usando o quadro COMO
+   DEVE FICAR acima.]"
+
+PRONTO QUANDO
+   As telas passam no checklist da 4.1 e o fluxo do
+   solicitante (com a triagem por IA) continua funcionando.
+
+
+==============================================================
+   PARTE 5 - TESTE DE PONTA A PONTA (Qua 18/11, todos)
+==============================================================
+
+   [ ] Login com senha errada: aparece "E-mail ou senha
+       inválidos."
+   [ ] Login como solicitante: abre o portal; analisar com IA;
+       enviar. O chamado aparece com prazo.
+   [ ] Login como agente: o chamado está na fila, com o
+       prazo; assumir. O histórico mostra o evento do Sistema.
+   [ ] Mudar a prioridade (pelo backend, se não houver botão):
+       o prazo muda e o histórico registra.
+   [ ] Pelo Telegram: comentar e concluir. O histórico mostra
+       o evento "Chamado concluído" do Sistema.
+   [ ] Um chamado com prazo vencido aparece como "Atrasado",
+       e o Painel de Dados conta esse chamado.
+   [ ] Apagar o token no navegador: volta ao login com o aviso
+       de sessão expirada.
+   [ ] Tentar chamar a API sem token (curl): 401.
+   [ ] Todas as telas passam no checklist visual da 4.1.
+
+
+==============================================================
+   PARTE 6 - SEGURANÇA, NÃO NEGOCIÁVEL
+==============================================================
+
+   * O SESSAO_SEGREDO vai SÓ no .env. Nunca no código, nunca no
+     GitHub, nunca no grupo.
+   * A senha nunca é guardada, nunca aparece em log, nunca vai
+     numa resposta da API.
+   * As senhas da demonstração são combinadas no privado.
+   * Antes de cada commit: git status, e o .env não pode
+     aparecer.
+
+
+==============================================================
+   PARTE 7 - DEPOIS DE PRONTO
+==============================================================
+
+Quando tudo estiver na main e testado, a apresentação muda:
+
+   * Slide 8: autenticação, histórico automático e SLA saem
+     de "Ainda não" e vão para "Funcionando".
+   * Slide 9: novos próximos passos (por exemplo publicação,
+     testes automatizados, recuperação de senha e o prazo de
+     primeira resposta do SLA).
+   * Roteiro: a demonstração ganha o login com senha, o evento
+     do Sistema no histórico e o alerta de prazo.
+
+Isso fica para depois do dia 19/11, com o código congelado.
+
+==============================================================

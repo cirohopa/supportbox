@@ -4,23 +4,6 @@ import type { Ator, DadosRelatorio } from "../dominio";
 import { RelatoriosDAO } from "../dao/RelatoriosDAO";
 import { ErroAcessoNegado, ErroValidacao } from "../erros";
 
-// Converte o texto "2026-09-01" em data. Se nao der, e erro de quem pediu.
-function lerData(texto: unknown, campo: string): Date {
-  const textoMontado = `${texto}T00:00:00`;
-  const data = new Date(textoMontado);
-
-  const numero = data.getTime();
-  const deuErrado = Number.isNaN(numero);
-
-  if (deuErrado) {
-    throw new ErroValidacao(
-      `Data "${campo}" invalida. Use o formato AAAA-MM-DD.`,
-    );
-  }
-
-  return data;
-}
-
 export class RelatoriosService {
   constructor(private dao: RelatoriosDAO = new RelatoriosDAO()) {}
 
@@ -29,8 +12,10 @@ export class RelatoriosService {
       throw new ErroAcessoNegado("Apenas um agente pode ver relatorios.");
     }
 
-    const inicio = lerData(de, "de");
-    const fim = lerData(ate, "ate");
+    // O "T00:00:00" fixa meia-noite no horario local. Sem ele o JavaScript
+    // usaria o horario de Londres, e a data cairia no dia anterior.
+    const inicio = new Date(`${de}T00:00:00`);
+    const fim = new Date(`${ate}T00:00:00`);
 
     if (inicio > fim) {
       throw new ErroValidacao(
@@ -42,6 +27,6 @@ export class RelatoriosService {
     // escolhido entra inteiro no relatorio.
     fim.setDate(fim.getDate() + 1);
 
-    return this.dao.gerarRelatorio(inicio, fim);
+    return this.dao.gerarRelatorioAtendimentos(inicio, fim);
   }
 }

@@ -1,0 +1,4 @@
+{
+  "typescript.tsdk": "supportbox-backend/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}

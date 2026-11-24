@@ -84,6 +84,8 @@ export interface ChamadoResumo {
   atribuidoA?: string;
   /** Data e hora de abertura, já formatadas para exibição. */
   criadoEmFormatado: string;
+  /** Prazo de resolução em formato ISO, ou null para chamados sem prazo. */
+  prazoEm: string | null;
 }
 
 /**

@@ -1,33 +1,31 @@
 /**
  * Formulário de entrada do sistema.
  *
- * Apresenta os campos de e-mail e senha em uma caixa simples e
+ * Apresenta os campos de e-mail e senha em um cartão e
  * dispara aoEnviar com os valores digitados. O formulário não sabe
  * validar o acesso por conta própria. Quem usa o componente recebe
  * os dados e decide o que fazer.
  *
- * Hoje, a página de entrada usa esse retorno só para escolher o
- * destino com base no e-mail. Quando a parte de autenticação for
- * adicionada, a função recebida em aoEnviar passa a fazer a
- * validação real e nada deste arquivo precisa mudar.
+ * A página de entrada trata a autenticação e decide o destino.
  */
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, LogIn } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle, LogIn } from "lucide-react";
 import { Botao } from "@/views/compartilhado/Botao";
 import { CampoTexto } from "@/views/compartilhado/CampoTexto";
 
 interface PropsFormularioLogin {
-  /**
-   * Função chamada quando o formulário é enviado. Recebe e-mail
-   * já com espaços removidos das pontas, e a senha exatamente
-   * como digitada.
-   */
-  aoEnviar?: (email: string, senha: string) => void;
+  aoEnviar: (email: string, senha: string) => Promise<void>;
+  carregando: boolean;
+  erro: string | null;
 }
 
-export function FormularioLogin({ aoEnviar }: PropsFormularioLogin) {
+export function FormularioLogin({
+  aoEnviar,
+  carregando,
+  erro,
+}: PropsFormularioLogin) {
   // Estado interno dos campos.
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -42,19 +40,16 @@ export function FormularioLogin({ aoEnviar }: PropsFormularioLogin) {
    */
   const submeter = (e: React.FormEvent) => {
     e.preventDefault();
-    aoEnviar?.(email.trim(), senha);
+    if (!carregando) void aoEnviar(email.trim(), senha);
   };
 
   return (
     <form
       onSubmit={submeter}
-      className="bg-papel border border-linha rounded-md p-6 w-full max-w-sm space-y-4"
+      className="w-full space-y-5 rounded-xl border border-linha bg-papel p-6 shadow-sm sm:p-8"
     >
       <div>
-        <h2 className="text-lg font-semibold text-tinta">Acessar o sistema</h2>
-        <p className="text-sm text-tintaFraca">
-          Use o e-mail corporativo cadastrado.
-        </p>
+        <h3 className="text-lg font-semibold text-tinta">Acessar o sistema</h3>
       </div>
 
       <CampoTexto
@@ -77,7 +72,7 @@ export function FormularioLogin({ aoEnviar }: PropsFormularioLogin) {
         <CampoTexto
           rotulo="Senha"
           type={mostrarSenha ? "text" : "password"}
-          placeholder="********"
+          placeholder="Digite sua senha"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
           required
@@ -86,9 +81,9 @@ export function FormularioLogin({ aoEnviar }: PropsFormularioLogin) {
         <button
           type="button"
           onClick={() => setMostrarSenha((m) => !m)}
-          className="absolute right-2 top-[34px] p-1 text-tintaFraca hover:text-tinta"
-          tabIndex={-1}
+          className="absolute right-2 top-[34px] rounded p-1 text-tintaFraca transition-colors hover:text-tinta focus-visible:outline focus-visible:outline-2 focus-visible:outline-marca"
           aria-label={mostrarSenha ? "Esconder senha" : "Mostrar senha"}
+          aria-pressed={mostrarSenha}
         >
           {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
@@ -97,12 +92,25 @@ export function FormularioLogin({ aoEnviar }: PropsFormularioLogin) {
       <Botao
         type="submit"
         larguraTotal
-        // Só fica disponível quando o usuário digitou algo em e-mail
-        // e senha.
-        disabled={!email.trim() || !senha.trim()}
+        disabled={!email.trim() || !senha.trim() || carregando}
+        aria-busy={carregando}
       >
-        <LogIn className="w-4 h-4" /> Entrar
+        {carregando ? (
+          <>
+            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+            Entrando...
+          </>
+        ) : (
+          <>
+            <LogIn className="h-4 w-4" aria-hidden="true" /> Entrar
+          </>
+        )}
       </Botao>
+      {erro && (
+        <p role="alert" className="text-sm text-red-600">
+          {erro}
+        </p>
+      )}
     </form>
   );
 }

@@ -24,6 +24,8 @@ import { TabelaChamados } from "./TabelaChamados";
 interface PropsPainelAgente {
   /** Lista completa de chamados que aparece no painel. */
   chamados: ChamadoResumo[];
+  /** Exibe o esqueleto enquanto a lista está sendo carregada. */
+  carregando?: boolean;
   /**
    * Busca a versão completa de um chamado a partir do id (chamado +
    * comentários, vindos do backend). Devolve `null` se não carregar.
@@ -39,6 +41,7 @@ interface PropsPainelAgente {
 
 export function PainelAgente({
   chamados,
+  carregando = false,
   obterDetalhes,
   aoAssumir,
   aoConcluir,
@@ -110,27 +113,33 @@ export function PainelAgente({
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-tinta">
-          Tickets Registrados
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-6 lg:p-8">
+      <header>
+        <p className="text-sm font-medium text-marca-forte">Atendimento</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-tinta">
+          Tickets
         </h1>
-        <p className="text-sm text-tintaFraca">
-          Visão geral dos chamados do sistema.
+        <p className="mt-1 text-sm text-tintaFraca">
+          Acompanhe e organize os chamados da sua equipe.
         </p>
-      </div>
+      </header>
 
-      <BarraFiltros
-        termoBusca={termoBusca}
-        abaAtiva={abaStatus}
-        aoMudarBusca={setTermoBusca}
-        aoMudarAba={setAbaStatus}
-      />
+      <section aria-label="Busca e filtros" className="space-y-4">
+        <BarraFiltros
+          termoBusca={termoBusca}
+          abaAtiva={abaStatus}
+          aoMudarBusca={setTermoBusca}
+          aoMudarAba={setAbaStatus}
+        />
+      </section>
 
-      <TabelaChamados
-        chamados={chamadosFiltrados}
-        aoSelecionar={(id) => setIdSelecionado(id)}
-      />
+      <section aria-label="Lista de chamados">
+        <TabelaChamados
+          chamados={chamadosFiltrados}
+          carregando={carregando}
+          aoSelecionar={(id) => setIdSelecionado(id)}
+        />
+      </section>
 
       <ModalDetalhesChamado
         chamado={detalhes}

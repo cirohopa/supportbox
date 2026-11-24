@@ -57,18 +57,17 @@ export default function PaginaLogin() {
         </div>
         <div className="mt-8 max-w-lg md:mb-12">
           <p className="mb-3 text-sm font-medium uppercase tracking-[0.16em] text-orange-300">
-            Central de Serviços de TI
+            Helpdesk Inteligente
           </p>
           <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">
-            Atendimento organizado, do primeiro contato à solução.
+            Nada fica fora da caixa.
           </h1>
           <p className="mt-4 max-w-md text-sm leading-6 text-slate-300">
-            Acesse sua conta para acompanhar solicitações e manter o trabalho
-            fluindo.
+            Todas as suas solicitações reunidas em um só lugar.
           </p>
         </div>
         <p className="hidden text-xs text-slate-400 md:block">
-          SupportBox · Central de Serviços de TI
+          SupportBox - Todos os direitos reservados
         </p>
       </section>
 

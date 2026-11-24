@@ -18,7 +18,17 @@ const config: Config = {
           hover: '#E66500',
           suave: '#FFF4EB',
           borda: '#FFD4B3',
+          // Variantes da paleta anterior, ainda usadas pelas telas de login,
+          // menu lateral, fila e janela de detalhes.
+          forte: '#E66500',
+          fraca: '#FFEDD5',
         },
+        // Cores da paleta anterior (mantidas para as telas que ainda as usam).
+        destaque: { DEFAULT: '#D97706', fraca: '#FEF3C7' },
+        tinta: '#0F172A',
+        tintaFraca: '#475569',
+        linha: '#E2E8F0',
+        papel: '#FFFFFF',
         fundo: '#F8FAFC',
         superficie: '#FFFFFF',
         borda: '#E2E8F0',

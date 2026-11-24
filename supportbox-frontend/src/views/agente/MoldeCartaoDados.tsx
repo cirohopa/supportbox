@@ -1,4 +1,3 @@
- renata
 import React from 'react';
 
 export interface PropsMoldeCartaoDados {
@@ -7,13 +6,6 @@ export interface PropsMoldeCartaoDados {
   icone?: React.ReactNode;
   subtitulo?: string;
   destaquePerigo?: boolean;
-
-interface PropsMoldeCartaoDados {
-  /** Texto pequeno no topo do cartão, em maiúsculas. */
-  rotulo: string;
-  /** O valor exibido em destaque. Aceita texto (ex.: "18h", "-") além de números. */
-  valor: string | number;
- main
 }
 
 export default function MoldeCartaoDados({

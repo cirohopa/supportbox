@@ -2,19 +2,32 @@ import React from 'react';
 import { LogOut, Inbox, CheckCircle2 } from 'lucide-react';
 import Botao from './Botao';
 
+/**
+ * Cabeçalho do topo da página. Aceita os nomes de props do redesign
+ * (perfil, aoSair) e os das telas que já existiam (subtitulo, aoSairClicado),
+ * para as duas versões conviverem.
+ */
 export interface PropsCabecalho {
   nomeUsuario?: string;
   emailUsuario?: string;
   perfil?: string;
   aoSair?: () => void;
+  /** Nome antigo de `perfil`. */
+  subtitulo?: string;
+  /** Nome antigo de `aoSair`. */
+  aoSairClicado?: () => void;
 }
 
-export default function Cabecalho({
+export function Cabecalho({
   nomeUsuario,
   emailUsuario,
-  perfil,
-  aoSair,
+  perfil: perfilNovo,
+  aoSair: aoSairNovo,
+  subtitulo,
+  aoSairClicado,
 }: PropsCabecalho) {
+  const perfil = perfilNovo ?? subtitulo;
+  const aoSair = aoSairNovo ?? aoSairClicado;
   function obterIniciais() {
     const base = nomeUsuario?.trim() || emailUsuario?.trim() || 'U';
     const partes = base.split(' ').filter(Boolean);
@@ -116,3 +129,5 @@ export function AvisoConfirmacao({ mensagem }: { mensagem: string | null }) {
     </div>
   );
 }
+
+export default Cabecalho;

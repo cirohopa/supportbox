@@ -40,3 +40,5 @@ export function EtiquetaPrazo({ prazoEm, status }: PropsEtiquetaPrazo) {
     </span>
   );
 }
+
+export default EtiquetaPrazo;

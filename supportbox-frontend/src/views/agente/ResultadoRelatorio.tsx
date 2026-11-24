@@ -10,13 +10,9 @@ import {
   Layers,
 } from 'lucide-react';
 import { RelatorioApi } from '@/lib/api';
- renata
 import MoldeCartaoDados from './MoldeCartaoDados';
 import Botao from '../compartilhado/Botao';
 import { EstadoVazio } from '../compartilhado/Cabecalho';
-
-import { MoldeCartaoDados } from '@/views/agente/MoldeCartaoDados';
-main
 
 export interface PropsResultadoRelatorio {
   dados: RelatorioApi;
@@ -44,7 +40,6 @@ export default function ResultadoRelatorio({ dados }: PropsResultadoRelatorio) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- renata
         <MoldeCartaoDados
           titulo="Criados"
           valor={dados.totalCriados}
@@ -63,11 +58,6 @@ export default function ResultadoRelatorio({ dados }: PropsResultadoRelatorio) {
           icone={<Clock className="w-4 h-4" />}
           subtitulo="Média para conclusão"
         />
-
-        <MoldeCartaoDados rotulo="Criados" valor={dados.totalCriados} />
-        <MoldeCartaoDados rotulo="Concluídos" valor={dados.totalConcluidos} />
-        <MoldeCartaoDados rotulo="Tempo médio" valor={tempoMedioGeral} />
- main
       </div>
 
       <div className="bg-superficie border border-borda rounded-xl shadow-sm overflow-hidden">
@@ -140,13 +130,8 @@ export default function ResultadoRelatorio({ dados }: PropsResultadoRelatorio) {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {dados.porCategoria.map((item, idx) => (
               <MoldeCartaoDados
- renata
                 key={item.categoria || idx}
                 titulo={formatarCategoria(item.categoria)}
-
-                key={item.categoria || index}
-                rotulo={formatarCategoria(item.categoria)}
- main
                 valor={item.total}
               />
             ))}

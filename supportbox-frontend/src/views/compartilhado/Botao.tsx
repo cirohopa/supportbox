@@ -1,77 +1,55 @@
-/**
- * Botão padrão usado em todo o sistema.
- *
- * Reúne em um lugar só a aparência dos botões para que todas as
- * telas fiquem visualmente parecidas sem repetir as classes do
- * Tailwind em cada componente. O botão cuida apenas de desenhar
- * o elemento. O que acontece quando o usuário clica fica a cargo
- * de quem está usando o botão, passando uma função em onClick.
- */
-"use client";
+import React from 'react';
+import { Loader2 } from 'lucide-react';
 
-import type { ButtonHTMLAttributes, ReactNode } from "react";
-
-/**
- * Aparências disponíveis para o botão. primario serve para a ação
- * principal de cada tela e secundario para ações de apoio que não
- * precisam de destaque.
- */
-type VarianteBotao = "primario" | "secundario";
-
-/**
- * Props do botão. Estende todos os atributos nativos de um
- * <button> do HTML, então qualquer atributo padrão (onClick,
- * disabled, type, etc.) pode ser passado normalmente.
- */
-interface PropsBotao extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Conteúdo do botão. Pode ser texto, ícone ou os dois. */
-  children: ReactNode;
-  /** Aparência usada. Quando não informado, vale primario. */
-  variante?: VarianteBotao;
-  /** Quando verdadeiro, o botão ocupa toda a largura disponível. */
-  larguraTotal?: boolean;
+export interface PropsBotao extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variante?: 'primario' | 'secundario' | 'fantasma' | 'perigo';
+  tamanho?: 'sm' | 'md' | 'lg';
+  carregando?: boolean;
+  icone?: React.ReactNode;
 }
 
-/**
- * Tabela que liga cada aparência ao conjunto de classes do Tailwind
- * correspondente. Manter este mapa no topo do arquivo facilita
- * ajustar a identidade visual sem precisar mexer na lógica do
- * componente.
- */
-const variantes: Record<VarianteBotao, string> = {
-  primario:
-    "bg-marca text-white hover:bg-marca-forte border border-marca",
-  secundario:
-    "bg-papel text-tinta hover:bg-fundo border border-linha",
-};
-
-export function Botao({
+export default function Botao({
   children,
-  variante = "primario",
-  larguraTotal = false,
-  className = "",
-  type = "button",
-  ...resto
+  variante = 'primario',
+  tamanho = 'md',
+  carregando = false,
+  icone,
+  disabled,
+  className = '',
+  ...props
 }: PropsBotao) {
-  // Classes que valem para qualquer aparência. Cuidam do tamanho,
-  // espaçamento, tipografia e dos estados de desativado.
-  const classesBase =
-    "inline-flex items-center justify-center gap-2 px-4 py-2 text-sm " +
-    "font-medium rounded-md transition-colors disabled:opacity-50 " +
-    "disabled:cursor-not-allowed";
+  const estilosBase =
+    'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed select-none';
+
+  const estilosVariante = {
+    primario:
+      'bg-marca text-white hover:bg-marca-hover focus:ring-marca shadow-sm',
+    secundario:
+      'bg-superficie text-texto border border-borda hover:bg-slate-50 focus:ring-slate-400 shadow-sm',
+    fantasma:
+      'bg-transparent text-textoSuave hover:text-texto hover:bg-slate-100 focus:ring-slate-300',
+    perigo:
+      'bg-perigo text-white hover:bg-red-700 focus:ring-perigo shadow-sm',
+  };
+
+  const estilosTamanho = {
+    sm: 'text-xs px-3 py-1.5',
+    md: 'text-sm px-4 py-2',
+    lg: 'text-base px-5 py-2.5',
+  };
 
   return (
     <button
-      type={type}
-      className={[
-        classesBase,
-        variantes[variante],
-        larguraTotal ? "w-full" : "",
-        className,
-      ].join(" ")}
-      {...resto}
+      disabled={disabled || carregando}
+      className={`${estilosBase} ${estilosVariante[variante]} ${estilosTamanho[tamanho]} ${className}`}
+      {...props}
     >
-      {children}
+      {carregando ? (
+        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+      ) : (
+        icone && <span className="shrink-0">{icone}</span>
+      )}
+      <span>{children}</span>
     </button>
   );
 }

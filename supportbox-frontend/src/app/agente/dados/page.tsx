@@ -1,4 +1,22 @@
-"use client";
+'use client';
+
+ renata
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Ticket,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+} from 'lucide-react';
+import { listarChamados, obterSessao } from '@/lib/api';
+import MoldeCartaoDados from '@/views/agente/MoldeCartaoDados';
+import MoldeBarraDados from '@/views/agente/MoldeBarraDados';
+import { EsqueletoBloco } from '@/views/compartilhado/Cabecalho';
+
+export default function PaginaPainelDados() {
+  const router = useRouter();
+  const [chamados, setChamados] = useState<any[]>([]);
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,11 +28,32 @@ import { listarChamados, type ChamadoApi } from "@/lib/api";
 export default function PaginaPainelDados() {
   const router = useRouter();
   const [chamados, setChamados] = useState<ChamadoApi[]>([]);
+ main
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  // Ao abrir a página: confere a sessão e busca os chamados.
   useEffect(() => {
+ renata
+    async function carregarDados() {
+      const sessao = obterSessao();
+      if (!sessao) {
+        router.push('/login');
+        return;
+      }
+
+      try {
+        setCarregando(true);
+        const lista = await listarChamados(sessao);
+        setChamados(lista || []);
+      } catch (err: any) {
+        setErro(err?.message || 'Erro ao carregar os indicadores do painel.');
+      } finally {
+        setCarregando(false);
+      }
+    }
+
+    carregarDados();
+
     const s = lerSessao();
     if (!s) {
       router.replace("/login?expirou=1");
@@ -24,11 +63,24 @@ export default function PaginaPainelDados() {
       .then(({ itens }) => setChamados(itens))
       .catch(() => setErro("Falha ao carregar os chamados."))
       .finally(() => setCarregando(false));
+ main
   }, [router]);
 
-  const requisicoes = chamados.filter((c) => c.tipo === "solicitacao").length;
-  const incidentes = chamados.filter((c) => c.tipo === "incidente").length;
-  const semAgente = chamados.filter((c) => c.agenteId === null).length;
+  const agora = new Date();
+
+  const totalChamados = chamados.length;
+  const abertos = chamados.filter((c) => c.status === 'aberto').length;
+  const emAndamento = chamados.filter((c) => c.status === 'em_andamento').length;
+  const concluidos = chamados.filter((c) => c.status === 'concluido').length;
+
+  const atrasados = chamados.filter((c) => {
+    if (c.status === 'concluido' || !c.prazoEm) return false;
+    return new Date(c.prazoEm) < agora;
+  }).length;
+
+  const baixa = chamados.filter((c) => c.prioridade === 'baixa').length;
+  const media = chamados.filter((c) => c.prioridade === 'media').length;
+  const alta = chamados.filter((c) => c.prioridade === 'alta').length;
 
   // Distribuição por prioridade.
   const fatiasPrioridade: FatiaBarra[] = [
@@ -95,18 +147,80 @@ export default function PaginaPainelDados() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-6 max-w-6xl mx-auto flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-tinta">Painel de Dados</h1>
-        <p className="text-sm text-tintaFraca">
-          Indicadores de volume, prioridade e tempo de atendimento dos chamados.
+        <h1 className="text-2xl font-bold text-texto">Painel de Dados</h1>
+        <p className="text-sm text-textoSuave">
+          Visão em tempo real do volume de chamados, prazos e prioridades.
         </p>
       </div>
 
       {erro && (
-        <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md p-3">
+        <div className="p-4 rounded-xl bg-perigo-fundo border border-perigo-borda text-perigo text-sm">
           {erro}
-        </p>
+        </div>
+      )}
+
+ renata
+      {carregando ? (
+        <EsqueletoBloco linhas={4} />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MoldeCartaoDados
+              titulo="Total de Chamados"
+              valor={totalChamados}
+              icone={<Ticket className="w-4 h-4" />}
+              subtitulo="Registrados no sistema"
+            />
+
+            <MoldeCartaoDados
+              titulo="Em Andamento"
+              valor={emAndamento}
+              icone={<Clock className="w-4 h-4" />}
+              subtitulo={`${abertos} aguardando atendimento`}
+            />
+
+            <MoldeCartaoDados
+              titulo="Concluídos"
+              valor={concluidos}
+              icone={<CheckCircle2 className="w-4 h-4" />}
+              subtitulo="Finalizados pela equipe"
+            />
+
+            <MoldeCartaoDados
+              titulo="Atrasados"
+              valor={atrasados}
+              icone={<AlertTriangle className="w-4 h-4" />}
+              subtitulo={
+                atrasados > 0
+                  ? 'Prazo vencido — atenção imediata'
+                  : 'Nenhum chamado em atraso'
+              }
+              destaquePerigo={atrasados > 0}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <MoldeBarraDados
+              titulo="Distribuição por Situação"
+              itens={[
+                { rotulo: 'Abertos', quantidade: abertos, corClasse: 'bg-info' },
+                { rotulo: 'Em andamento', quantidade: emAndamento, corClasse: 'bg-atencao' },
+                { rotulo: 'Concluídos', quantidade: concluidos, corClasse: 'bg-sucesso' },
+              ]}
+            />
+
+            <MoldeBarraDados
+              titulo="Distribuição por Prioridade"
+              itens={[
+                { rotulo: 'Baixa', quantidade: baixa, corClasse: 'bg-slate-500' },
+                { rotulo: 'Média', quantidade: media, corClasse: 'bg-atencao' },
+                { rotulo: 'Alta', quantidade: alta, corClasse: 'bg-perigo' },
+              ]}
+            />
+          </div>
+        </>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -126,6 +240,7 @@ export default function PaginaPainelDados() {
           fatias={fatiasStatus}
         />
       </div>
+ main
     </div>
   );
 }

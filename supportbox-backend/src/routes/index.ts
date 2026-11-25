@@ -49,7 +49,6 @@ export function listarRotas(): Rota[] {
   const triagem = new TriagemController();
 
   return [
-    // Autenticacao - ainda respondem 501: nao existe AuthService.
     rota("POST", "/api/auth/login", auth.login),
     rota("POST", "/api/auth/logout", auth.logout),
     rota("GET", "/api/auth/me", auth.me),

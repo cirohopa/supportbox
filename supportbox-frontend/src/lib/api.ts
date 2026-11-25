@@ -238,6 +238,23 @@ export function concluirChamado(
   return requisitar("POST", `/api/chamados/${idChamado}/concluir`, sessao);
 }
 
+/**
+ * Agente troca a prioridade do chamado.
+ *
+ * O backend so aceita agente, grava a mudanca no historico do chamado
+ * ("Prioridade alterada de Média para Alta por ...") e recalcula o prazo
+ * de resolucao a partir da data de abertura.
+ */
+export function alterarPrioridade(
+  sessao: Sessao,
+  idChamado: string,
+  prioridade: ChamadoApi["prioridade"],
+): Promise<ChamadoApi> {
+  return requisitar("PATCH", `/api/chamados/${idChamado}/prioridade`, sessao, {
+    prioridade,
+  });
+}
+
 // --- Triagem por IA ---------------------------------------------------
 
 /** Manda o rascunho para a IA analisar, ANTES de abrir o chamado. */

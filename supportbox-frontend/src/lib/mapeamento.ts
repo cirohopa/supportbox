@@ -36,6 +36,20 @@ const PRIORIDADE: Record<ChamadoApi["prioridade"], PrioridadeChamado> = {
   alta: "Alta",
 };
 
+/**
+ * Caminho inverso da prioridade: rotulo da tela -> valor do backend.
+ *
+ * Usado quando o agente troca a prioridade na janela de detalhes: a tela
+ * conhece "Média", mas o backend so aceita "media". Exemplo:
+ * paraPrioridadeApi("Média") devolve "media".
+ */
+export function paraPrioridadeApi(
+  rotulo: PrioridadeChamado,
+): ChamadoApi["prioridade"] {
+  const par = Object.entries(PRIORIDADE).find(([, r]) => r === rotulo);
+  return (par?.[0] ?? "media") as ChamadoApi["prioridade"];
+}
+
 /** categoria do backend -> rotulo da tela. */
 const CATEGORIA: Record<string, CategoriaChamado> = {
   hardware: "Hardware",

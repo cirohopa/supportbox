@@ -14,7 +14,7 @@
 
 import { useState } from "react";
 import { CheckCircle, Clock, Send, Tag, User, UserCheck, X } from "lucide-react";
-import type { ChamadoDetalhado } from "./tipos-view";
+import type { ChamadoDetalhado, PrioridadeChamado } from "./tipos-view";
 import { Botao } from "./Botao";
 import { Etiqueta, corPorPrioridade, corPorStatus } from "./Etiqueta";
 
@@ -48,6 +48,13 @@ interface PropsModalDetalhesChamado {
    */
   aoConcluir?: () => void;
   /**
+   * Função chamada quando o agente escolhe outra prioridade. Quando
+   * informada (e só em modo agente, com o chamado ainda aberto), a
+   * etiqueta de prioridade vira uma lista de escolha. Serve para corrigir
+   * a prioridade sugerida pela triagem por IA.
+   */
+  aoAlterarPrioridade?: (prioridade: PrioridadeChamado) => void;
+  /**
    * Função chamada quando o usuário envia um comentário novo.
    * Recebe o texto digitado já com os espaços removidos das pontas.
    */
@@ -61,6 +68,7 @@ export function ModalDetalhesChamado({
   modoAgente = false,
   aoAssumir,
   aoConcluir,
+  aoAlterarPrioridade,
   aoEnviarComentario,
 }: PropsModalDetalhesChamado) {
   // O texto que o usuário está digitando como novo comentário.
@@ -138,10 +146,30 @@ export function ModalDetalhesChamado({
             {chamado.criadoEmFormatado}
           </Metadado>
           <Metadado titulo="Categoria">{chamado.categoria}</Metadado>
+          {/*
+            O agente pode corrigir a prioridade (por exemplo, quando a IA
+            sugeriu "Baixa" para um problema grave). Para o solicitante, ou
+            com o chamado concluído, continua sendo só a etiqueta colorida.
+          */}
           <Metadado titulo="Prioridade">
-            <Etiqueta classeCor={corPorPrioridade(chamado.prioridade)}>
-              {chamado.prioridade}
-            </Etiqueta>
+            {modoAgente && !concluido && aoAlterarPrioridade ? (
+              <select
+                aria-label="Alterar prioridade"
+                value={chamado.prioridade}
+                onChange={(e) =>
+                  aoAlterarPrioridade(e.target.value as PrioridadeChamado)
+                }
+                className="px-2 py-1 border border-linha rounded-md text-sm bg-papel focus:outline-none focus:ring-2 focus:ring-marca/30 focus:border-marca"
+              >
+                <option value="Baixa">Baixa</option>
+                <option value="Média">Média</option>
+                <option value="Alta">Alta</option>
+              </select>
+            ) : (
+              <Etiqueta classeCor={corPorPrioridade(chamado.prioridade)}>
+                {chamado.prioridade}
+              </Etiqueta>
+            )}
           </Metadado>
           <Metadado titulo="Situação">
             <Etiqueta classeCor={corPorStatus(chamado.status)}>

@@ -18,17 +18,19 @@ import { PainelAgente } from "@/views/agente/PainelAgente";
 import type {
   ChamadoDetalhado,
   ChamadoResumo,
+  PrioridadeChamado,
 } from "@/views/compartilhado/tipos-view";
 import { lerSessao, type Sessao } from "@/lib/sessao";
 import {
   adicionarComentario,
+  alterarPrioridade,
   assumirChamado,
   concluirChamado,
   detalharChamado,
   listarChamados,
   listarComentarios,
 } from "@/lib/api";
-import { paraDetalhado, paraResumo } from "@/lib/mapeamento";
+import { paraDetalhado, paraPrioridadeApi, paraResumo } from "@/lib/mapeamento";
 
 export default function PaginaAgente() {
   const router = useRouter();
@@ -112,6 +114,23 @@ export default function PaginaAgente() {
     }
   };
 
+  /**
+   * Troca a prioridade do chamado e recarrega a lista.
+   * A tela entrega o rótulo ("Alta"); aqui ele vira o valor do backend
+   * ("alta") antes de ir para a API.
+   */
+  const aoAlterarPrioridade = async (
+    id: string,
+    prioridade: PrioridadeChamado,
+  ) => {
+    try {
+      await alterarPrioridade(sessao, id, paraPrioridadeApi(prioridade));
+      await carregarChamados(sessao);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Falha ao alterar a prioridade.");
+    }
+  };
+
   /** Envia um comentário e recarrega a lista. */
   const aoComentar = async (idChamado: string, texto: string) => {
     try {
@@ -142,6 +161,7 @@ export default function PaginaAgente() {
         obterDetalhes={obterDetalhes}
         aoAssumir={aoAssumir}
         aoConcluir={aoConcluir}
+        aoAlterarPrioridade={aoAlterarPrioridade}
         aoComentar={aoComentar}
       />
     </>

@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   ChamadoDetalhado,
   ChamadoResumo,
+  PrioridadeChamado,
 } from "@/views/compartilhado/tipos-view";
 import { ModalDetalhesChamado } from "@/views/compartilhado/ModalDetalhesChamado";
 import { BarraFiltros, type AbaStatus } from "./BarraFiltros";
@@ -35,6 +36,11 @@ interface PropsPainelAgente {
   aoAssumir?: (idChamado: string) => void | Promise<void>;
   /** Função chamada quando o agente aperta Concluir na janela. */
   aoConcluir?: (idChamado: string) => void | Promise<void>;
+  /** Função chamada quando o agente troca a prioridade na janela. */
+  aoAlterarPrioridade?: (
+    idChamado: string,
+    prioridade: PrioridadeChamado,
+  ) => void | Promise<void>;
   /** Função chamada quando o agente envia um comentário. */
   aoComentar?: (idChamado: string, texto: string) => void | Promise<void>;
 }
@@ -45,6 +51,7 @@ export function PainelAgente({
   obterDetalhes,
   aoAssumir,
   aoConcluir,
+  aoAlterarPrioridade,
   aoComentar,
 }: PropsPainelAgente) {
   // Filtros aplicados pelo agente (puramente visuais).
@@ -106,6 +113,11 @@ export function PainelAgente({
     await aoConcluir?.(idSelecionado);
     await recarregarDetalhes();
   };
+  const alterarPrioridadeERecarregar = async (prioridade: PrioridadeChamado) => {
+    if (idSelecionado === null) return;
+    await aoAlterarPrioridade?.(idSelecionado, prioridade);
+    await recarregarDetalhes();
+  };
   const comentarERecarregar = async (texto: string) => {
     if (idSelecionado === null) return;
     await aoComentar?.(idSelecionado, texto);
@@ -148,6 +160,7 @@ export function PainelAgente({
         modoAgente
         aoAssumir={assumirERecarregar}
         aoConcluir={concluirERecarregar}
+        aoAlterarPrioridade={alterarPrioridadeERecarregar}
         aoEnviarComentario={comentarERecarregar}
       />
     </div>

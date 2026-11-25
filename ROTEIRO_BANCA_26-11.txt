@@ -1,0 +1,898 @@
+==============================================================
+   SUPPORTBOX - ROTEIRO DA APRESENTAÇÃO PARA A BANCA
+   Quinta-feira, 26/11/2026 | Ciro, Gabriel, Isaac e Renata
+==============================================================
+
+   Parte 0   Como usar este roteiro
+   Parte 1   O roteiro em uma página
+   Parte 2   Slides, fala por fala
+   Parte 3   Demonstração: a vida de um chamado
+   Parte 4   Código-fonte
+   Parte 5   Encerramento
+   Parte 6   Perguntas da banca e respostas
+   Parte 7   Plano de ensaios até 26/11
+   Parte 8   Ajustes nos slides antes da banca
+   Parte 9   Checklist do dia e planos B
+
+
+==============================================================
+   PARTE 0 - COMO USAR ESTE ROTEIRO
+==============================================================
+
+AS FALAS SÃO APOIO, NÃO TEXTO PARA DECORAR. Quem decora trava
+quando esquece uma palavra. Entenda a ideia de cada bloco e
+fale com as suas palavras.
+
+A EXCEÇÃO são as FRASES-ÂNCORA, marcadas com >>. Essas valem
+a pena sair exatamente assim, porque são as que a banca vai
+lembrar. Cada pessoa tem duas ou três.
+
+O FIO DA HISTÓRIA: a apresentação inteira conta a vida de UM
+chamado. A Renata abre com o chamado "o computador não
+funciona", e a demonstração mostra um chamado de verdade
+nascendo, sendo atendido, sendo fechado pelo celular e
+chegando ao banco. No fim, a Renata volta ao chamado do
+começo. É isso que faz a apresentação parecer uma coisa só,
+e não quatro pessoas falando separadas.
+
+TEMPO: 13:45 dentro de 15 minutos. Se a banca der outro
+limite, ajustem nos blocos de demonstração, que são os mais
+fáceis de esticar ou encurtar.
+
+
+==============================================================
+   PARTE 1 - O ROTEIRO EM UMA PÁGINA
+==============================================================
+
+   #   BLOCO                              QUEM       TEMPO
+   ---------------------------------------------------------
+   1   Slides 1 a 3: abertura, problema   Renata     1:30
+       e solução
+   2   Slides 4 e 5: regras e IA          Gabriel    1:15
+   3   Slides 6 e 7: arquitetura e        Ciro       1:15
+       tecnologias
+   4   Slide 8: onde estamos              Isaac      0:45
+       ---------------------------------------- slides: 4:45
+
+   5   Demo: o solicitante e a triagem    Isaac      1:15
+   6   Demo: a área do agente             Renata     1:30
+   7   Demo: o Telegram                   Gabriel    1:30
+   8   Demo: o banco ao vivo              Ciro       0:45
+       ------------------------------------------ demo: 5:00
+
+   9   Código: frontend                   Isaac      1:00
+   10  Código: backend                    Ciro       1:00
+   11  Código: os agentes de IA           Gabriel    1:00
+       ---------------------------------------- código: 3:00
+
+   12  Slide 9 e encerramento             Renata     1:00
+       ---------------------------------------------------
+                                          TOTAL     13:45
+
+AS PASSAGENS DE VEZ: cada pessoa termina o seu bloco
+chamando a próxima pelo nome. Está escrito no fim de cada
+fala. Isso costura a apresentação e evita silêncio.
+
+
+==============================================================
+   PARTE 2 - SLIDES, FALA POR FALA
+==============================================================
+
+--------------------------------------------------------------
+SLIDE 1 - CAPA                              RENATA   20 seg
+--------------------------------------------------------------
+
+Fale olhando para a banca, não para a tela. É a primeira
+impressão.
+
+   "Boa noite a todos da banca.
+
+   Toda empresa já recebeu um chamado assim: 'o computador
+   não funciona'. Sem detalhe, sem contexto, e alguém da TI
+   vai ter que adivinhar o resto.
+
+>> O SupportBox nasceu para que esse chamado nunca mais
+>> chegue assim.
+
+   Nós somos o Ciro, o Gabriel, o Isaac e eu, Renata. E este
+   é o SupportBox: uma central de chamados de TI com triagem
+   e atendimento por inteligência artificial."
+
+Não pare aqui. Emende direto no próximo slide.
+
+
+--------------------------------------------------------------
+SLIDE 2 - O PROBLEMA                        RENATA   40 seg
+--------------------------------------------------------------
+
+   "Quem já trabalhou com suporte de TI conhece essas três
+   dores.
+
+   A primeira: o chamado chega sem informação. A pessoa
+   escreve 'o computador não funciona', e o técnico perde
+   tempo voltando para perguntar o que aconteceu.
+
+   A segunda: a fila fica sobrecarregada com problemas
+   simples e repetitivos, que a própria pessoa resolveria em
+   dois minutos se alguém tivesse dito o que tentar.
+
+   E a terceira: a TI não consegue acompanhar a própria
+   operação. Quem atendeu o quê? Em quanto tempo? Sem esses
+   números, a qualidade do suporte fica invisível.
+
+>> Sem organização, o time de TI só reage aos problemas,
+>> em vez de evitar que eles aconteçam."
+
+
+--------------------------------------------------------------
+SLIDE 3 - A SOLUÇÃO                         RENATA   30 seg
+--------------------------------------------------------------
+
+Percorra o desenho com a mão, da esquerda para a direita.
+
+   "A nossa solução organiza o ciclo de vida do chamado num
+   fluxo único. Ele nasce Aberto, vai para Em Andamento
+   quando um agente assume, e só então pode ser Concluído,
+   sem pular etapas. E, depois de concluído, o solicitante
+   ainda pode reabrir em até sete dias.
+
+   O sistema tem dois papéis. O solicitante é quem pede
+   ajuda: o colaborador que abre o chamado. O agente é quem
+   resolve: o analista de TI que atende a fila.
+
+   E aqui eu passo para o Gabriel, que vai mostrar as regras
+   que sustentam esse fluxo."
+
+
+--------------------------------------------------------------
+SLIDE 4 - AS REGRAS DE NEGÓCIO              GABRIEL  35 seg
+--------------------------------------------------------------
+
+   "Antes de escrever a primeira linha de código, levantamos
+   os requisitos, os casos de uso e as regras de negócio que
+   refletem o uso real de um help desk. Destaco aqui as
+   quatro principais.
+
+   O chamado nasce completo: título, descrição, categoria e
+   tipo são obrigatórios. Existe um responsável por chamado:
+   só o agente que assumiu pode concluí-lo. O histórico é
+   permanente: nenhum comentário pode ser editado ou
+   excluído. E cada papel vê o que é seu: o solicitante, só
+   os próprios chamados; o agente, todos.
+
+>> Todas essas regras estão implementadas na camada de
+>> Service. Esconder um botão na tela é conveniência, não
+>> segurança."
+
+ATENÇÃO: diga "todas ESSAS", e não "todas as regras". O SLA,
+que é outra regra do documento, está só em parte: existe o
+prazo de resolução, mas não o de primeira resposta.
+
+
+--------------------------------------------------------------
+SLIDE 5 - DOIS AGENTES DE IA                GABRIEL  40 seg
+--------------------------------------------------------------
+
+   "Colocamos a inteligência artificial em dois pontos, com
+   propósitos opostos.
+
+   O primeiro ajuda quem abre o chamado. Antes do envio, a
+   IA lê o título e a descrição, sugere passos simples que a
+   pessoa pode tentar sozinha e já classifica a prioridade.
+   Se ela resolver, o chamado nem precisa existir. E, se a
+   IA falhar, o chamado é aberto normalmente.
+
+   O segundo ajuda quem atende. Pelo Telegram, o analista
+   comenta e conclui chamados em linguagem natural, direto do
+   celular, mesmo longe do computador.
+
+>> Nos dois casos, a IA só interpreta o texto e devolve um
+>> objeto. Quem executa é o próprio sistema.
+
+   E como isso se encaixa na arquitetura, quem mostra é o
+   Ciro."
+
+
+--------------------------------------------------------------
+SLIDE 6 - A ARQUITETURA EM CAMADAS          CIRO     45 seg
+--------------------------------------------------------------
+
+Percorra o desenho com a mão, da esquerda para a direita.
+
+   "Este é o caminho de uma requisição no SupportBox.
+
+   Ela entra por uma porta, que hoje pode ser o navegador ou
+   o Telegram, e chega ao Controller. O Controller só recebe
+   o pedido e identifica quem está pedindo: ele não decide
+   nada.
+
+   Quem decide é o Service, onde moram as regras de negócio.
+   Aprovado, o Service chama o DAO, a única camada que
+   escreve SQL. E aí sim chega ao banco.
+
+   Cada camada só conversa com a vizinha. A volta faz o
+   mesmo caminho ao contrário.
+
+>> E repare: o Telegram entrou como mais uma porta de
+>> entrada. Nenhuma regra foi reescrita para ele."
+
+
+--------------------------------------------------------------
+SLIDE 7 - TECNOLOGIAS UTILIZADAS            CIRO     30 seg
+--------------------------------------------------------------
+
+Não leia a lista inteira. Cite as principais e vá ao rodapé.
+
+   "No frontend, Next.js com React, TypeScript e Tailwind. No
+   backend, Node.js com TypeScript. O banco é PostgreSQL, com
+   o SQL. E a inteligência artificial é o
+   Google Gemini.
+
+>> Uma decisão tomada de propósito: no backend, sem
+>> framework e sem ORM. Foi uma escolha de aprendizado, para
+>> enxergar o que cada camada faz, sem mágica no meio.
+
+   E agora o Isaac mostra onde o projeto está hoje."
+
+
+--------------------------------------------------------------
+SLIDE 8 - ONDE ESTAMOS                      ISAAC    45 seg
+--------------------------------------------------------------
+
+   "Do lado esquerdo, o que já funciona de ponta a ponta: o
+   login com senha e sessão, a abertura de chamado com
+   triagem por IA, a fila do agente com assumir e concluir, o
+   histórico automático a cada mudança, o prazo por
+   prioridade com alerta de atraso, o painel de dados com o
+   relatório por período e o bot do Telegram.
+
+   Do lado direito, o que ainda não existe, e preferimos
+   dizer antes que nos perguntem: a publicação fora da
+   máquina local, os testes automatizados, a recuperação de
+   senha e, no SLA, o prazo de primeira resposta e os
+   feriados.
+
+>> Agora, em vez de falar sobre o sistema, vamos mostrar
+>> ele funcionando."
+
+
+==============================================================
+   PARTE 3 - DEMONSTRAÇÃO: A VIDA DE UM CHAMADO
+==============================================================
+
+A demonstração conta UMA história: um chamado nasce, é
+atendido, é fechado pelo celular e chega ao banco. Não pulem
+de tela em tela sem ligação.
+
+REGRA DE OURO DA DEMO: diga o que vai fazer ANTES de clicar,
+e o que aconteceu DEPOIS. Clique em silêncio é tempo morto.
+
+
+--------------------------------------------------------------
+BLOCO 5 - O SOLICITANTE E A TRIAGEM         ISAAC    1:15
+--------------------------------------------------------------
+
+   1. entrar como solicitante (e-mail sem a palavra "agente")
+   2. título: "Impressora do financeiro não imprime"
+   3. descrição com duas ou três frases reais (mínimo de 20
+      caracteres para enviar)
+   4. categoria Hardware, tipo Incidente
+   5. clicar em Analisar com IA e esperar
+   6. ler os passos em voz alta, apontar a prioridade
+   7. enviar e mostrar o chamado em Meus Chamados
+   8. ANOTAR O PROTOCOLO e falar em voz alta para o Gabriel
+
+   "Agora eu sou um colaborador do Financeiro, e a minha
+   impressora parou. Preencho o chamado e, antes de enviar,
+   peço ajuda à IA.
+
+   Olhem o que voltou: passos simples, escritos para quem
+   não é de TI, nada arriscado. Se um desses resolver, a TI
+   nem fica sabendo, e a fila agradece.
+
+   E aqui embaixo: a IA também classificou a prioridade, de
+   acordo com a gravidade do que eu escrevi.
+
+   Vamos supor que não resolveu. Envio, e o chamado já
+   aparece na minha lista, com o protocolo CH-2026-..."
+
+   (lê o protocolo em voz alta)
+
+   "Renata, ele está na sua fila."
+
+
+--------------------------------------------------------------
+BLOCO 6 - A ÁREA DO AGENTE                  RENATA   1:30
+--------------------------------------------------------------
+
+   9.  sair e entrar como agente, com o MESMO e-mail que está
+       ligado ao Telegram do Gabriel (ver checklist)
+   10. mostrar o chamado do Isaac na fila, com a prioridade
+   11. assumir
+   12. comentar: 'Olá, poderia informar o patrimônio e a
+       marca da impressora?'
+   13. abrir o Painel de Dados
+   14. abrir Relatórios, escolher o período, gerar
+
+   "Agora eu sou a analista de TI. O chamado que o Isaac
+   acabou de abrir já está na minha fila, com a prioridade
+   que a IA sugeriu.
+
+   Assumo o chamado. Nesse momento ele vai para Em Andamento
+   e passa a ser meu: a partir daqui, só eu posso concluir.
+
+   Registro um comentário pedindo mais informações. Ele fica
+   no histórico e não pode ser editado nem apagado.
+
+   No Painel de Dados, acompanhamos o volume de chamados por
+   tipo, prioridade e situação, e o tempo médio de
+   atendimento. São números calculados a partir dos chamados
+   reais.
+
+   E nos Relatórios, eu escolho um período e vejo quantos
+   chamados foram criados e concluídos, o tempo médio por
+   analista e por categoria. Esse cálculo é feito no próprio
+   banco, em SQL, e o relatório pode ser impresso.
+
+   Mas um analista de TI raramente está sentado no
+   computador. Gabriel?"
+
+
+--------------------------------------------------------------
+BLOCO 7 - O TELEGRAM                        GABRIEL  1:30
+--------------------------------------------------------------
+
+Este é o momento de impacto da apresentação. Fale mais
+devagar aqui. Deixe a tela do celular ou do Telegram Web bem
+visível.
+
+   15. mostrar a conversa com o bot
+   16. escrever: "comenta no CH-2026-0XX que troquei o cabo
+       de rede"
+   17. ler a resposta do bot em voz alta
+   18. escrever: "pode fechar o CH-2026-0XX, problema
+       resolvido"
+   19. ler a resposta em voz alta
+   20. voltar ao navegador e atualizar o chamado
+
+   "Agora eu sou o técnico, no meio do atendimento, longe do
+   computador.
+
+   Eu escrevo no Telegram como escreveria para um colega.
+   Repare que não tem comando, não tem barra, não tem
+   palavra-chave. É português normal.
+
+   (envia e lê a resposta)
+
+   O bot confirmou o comentário. Agora: pode fechar, problema
+   resolvido.
+
+   (envia e lê a resposta)
+
+   Voltando ao navegador e atualizando... o chamado está
+   concluído, e os comentários que eu mandei estão no
+   histórico, junto com o da Renata.
+
+   O que aconteceu por baixo: a IA só leu a frase e separou
+   três informações: a ação, o protocolo e o texto. Quem
+   executou foram os mesmos Services que a tela usa, com as
+   mesmas regras.
+
+>> Se eu tentasse fechar um chamado que não é meu, o
+>> sistema recusaria. A regra está no código, não no que a
+>> IA entendeu.
+
+   E onde isso foi parar, o Ciro mostra."
+
+
+--------------------------------------------------------------
+BLOCO 8 - O BANCO AO VIVO                   CIRO     45 seg
+--------------------------------------------------------------
+
+Emende direto, sem pausa. É a prova da corrente inteira.
+Deixe a consulta já digitada, só trocando o protocolo:
+
+   SELECT protocolo, status, prioridade, agente_id, concluido_em
+   FROM chamados
+   WHERE protocolo = 'CH-2026-0XX';
+
+   "E aqui é o banco de dados, o fim dessa corrente.
+
+   Esta é a linha daquele chamado. O status está concluído,
+   o responsável é o e-mail da analista, e a data de
+   conclusão foi gravada agora há pouco, quando o Gabriel
+   mandou a mensagem pelo celular.
+
+>> Saiu do Telegram, passou pelo Controller, pelo Service,
+>> pelo DAO, e chegou aqui."
+
+
+==============================================================
+   PARTE 4 - CÓDIGO-FONTE
+==============================================================
+
+Aqui os slides saem da tela e entra o editor de código.
+
+REGRA: mostre o ARQUIVO e diga o que ele faz. Não leia código
+linha por linha. Três arquivos por pessoa, no máximo. Deixem
+as abas abertas na ordem, com a fonte aumentada e o tema
+claro.
+
+
+--------------------------------------------------------------
+CÓDIGO: FRONTEND                            ISAAC    1:00
+--------------------------------------------------------------
+
+   src/app/
+   "Cada pasta aqui é um endereço do site. A pasta
+   agente/dados vira o endereço /agente/dados. Não existe um
+   arquivo de rotas: a pasta é a rota."
+
+   src/views/
+   "Aqui ficam os componentes visuais, separados por área:
+   agente, solicitante e os compartilhados. Eles só
+   desenham: recebem os dados prontos e não buscam nada
+   sozinhos."
+
+   src/lib/api.ts
+   "E este é o arquivo mais importante do frontend. Nenhuma
+   tela chama o backend direto: toda requisição passa por
+   aqui.
+
+>> Se amanhã o endereço do backend mudar, muda uma linha
+>> só."
+
+   "Ciro, a requisição saiu daqui. Para onde ela vai?"
+
+
+--------------------------------------------------------------
+CÓDIGO: BACKEND                             CIRO     1:00
+--------------------------------------------------------------
+
+Siga a mesma ordem do slide da arquitetura.
+
+   src/app.ts             "recebe a requisição e procura qual
+                           rota atende"
+
+   src/routes/index.ts    "a tabela de rotas: método, caminho
+                           e qual Controller responde"
+
+   src/controllers/       "recebem o pedido e identificam
+                           quem pede"
+   src/services/          "aplicam as regras"
+   src/dao/               "a única camada que escreve SQL"
+
+   Abrir o RelatoriosDAO e mostrar UMA consulta:
+
+   "Esta é a consulta do relatório. Ela agrupa por analista e
+   calcula a média de horas entre a abertura e a conclusão,
+   direto no banco."
+
+   src/db.ts
+>> "A conexão com o PostgreSQL fica num lugar só. Trocar de
+>> banco mexe aqui e nas DAOs, e em mais nada."
+
+   "E a parte de inteligência artificial, o Gabriel mostra."
+
+
+--------------------------------------------------------------
+CÓDIGO: OS AGENTES DE IA                    GABRIEL  1:00
+--------------------------------------------------------------
+
+   src/ia.ts
+   "Este é a conexão com o Gemini, pela biblioteca oficial do
+   Google. Ele lê a chave do .env e, se ela não existir, o
+   backend nem sobe: para na partida dizendo o que falta."
+
+   src/services/TriagemService.ts
+   (aponte para o esquema, linhas 24 a 32)
+   "Na triagem, o esquema define o formato que a IA é
+   obrigada a devolver: uma lista de passos, cada um com
+   título e detalhe, e uma prioridade que só pode ser baixa,
+   média ou alta."
+
+   (aponte para a linha 94)
+   "E, quando a resposta volta, o mesmo esquema confere o
+   formato, pela biblioteca Zod.
+
+>> A gente não confia que a IA obedeceu. A gente confere."
+
+   src/controllers/TelegramController.ts
+   "E aqui é a porta do Telegram. A cada mensagem, ele
+   confere se quem mandou é um agente cadastrado e pede ao
+   AssistenteService para a IA entender o pedido."
+
+   (aponte para a linha 95, onde ele busca o chamado)
+   "Daqui para baixo, a IA para: são os mesmos Services de
+   sempre que executam."
+
+   "E para fechar, a Renata."
+
+SE SOBRAR TEMPO, mostre o bloco SEGURANÇA das instruções da
+IA (linhas 55 a 58 do TriagemService) e explique a proteção
+contra injeção de prompt.
+
+
+==============================================================
+   PARTE 5 - ENCERRAMENTO
+==============================================================
+
+--------------------------------------------------------------
+SLIDE 9 - PRÓXIMOS PASSOS E FECHO           RENATA   1:00
+--------------------------------------------------------------
+
+Volte para os slides.
+
+   "O SupportBox já funciona de ponta a ponta, e tem um
+   caminho claro de evolução.
+
+   Primeiro, a publicação: colocar o SupportBox no ar, fora
+   da máquina de desenvolvimento.
+
+   Segundo, testes automatizados, para conferir as regras de
+   negócio a cada mudança.
+
+   Terceiro, recuperação de senha por e-mail, com bloqueio
+   depois de tentativas erradas.
+
+   E quarto, o SLA completo: prazo de primeira resposta, pausa
+   do cronômetro e feriados.
+
+   Lembram do chamado do começo, 'o computador não funciona'?
+
+>> No SupportBox, ele chega completo, às vezes nem chega,
+>> porque a IA ajudou antes. Tem um responsável, um
+>> histórico que não se apaga, e pode ser fechado até pelo
+>> celular do técnico.
+
+   Esse é o SupportBox. Agradecemos a atenção da banca, e
+   ficamos à disposição para perguntas."
+
+
+==============================================================
+   PARTE 6 - PERGUNTAS DA BANCA E RESPOSTAS
+==============================================================
+
+COMO RESPONDER:
+   * Quem responde é quem fez a parte. Se a pergunta for de
+     outra pessoa: "essa parte foi o Ciro que fez, ele
+     explica melhor".
+   * Responda em duas ou três frases. Se a banca quiser mais,
+     ela pergunta.
+   * Não sabe? Não invente. Diga "isso nós não implementamos
+     ainda" ou "não testamos esse caso, mas o caminho seria...".
+     Honestidade com direção vale ponto.
+
+
+--------------------------------------------------------------
+A) SOBRE O PROJETO (qualquer um responde)
+--------------------------------------------------------------
+
+"Qual o diferencial do SupportBox?"
+   Dois agentes de IA com propósitos opostos: um evita que o
+   chamado nasça, o outro acelera quem atende. E os dois
+   entraram sem quebrar a arquitetura.
+
+"Que metodologia vocês seguiram?"
+   O planejamento seguiu artefatos do PMBOK, como TAP, EAP,
+   Matriz RACI e cronograma, numa abordagem em fases. Na
+   construção, trabalhamos em entregas semanais: cada dupla
+   na sua branch do Git, integrando na main depois de
+   revisar.
+
+"Quais artefatos vocês produziram?"
+   Plano de Gestão do Projeto, requisitos funcionais e não
+   funcionais, casos de uso com protótipos, diagramas de
+   caso de uso, de sequência e de classes, o modelo das
+   tabelas e o documento de regras de negócio. Está tudo
+   no PDF entregue.
+
+"Qual foi a contribuição de cada um?"
+   Cada um responde a sua parte em uma frase. Combinem
+   antes, no ensaio. Exemplo do Gabriel: "Eu fiquei com as
+   regras de negócio na camada de Service, os dois agentes
+   de IA e o relatório de atendimentos no backend."
+
+"O que vocês fariam diferente se começassem hoje?"
+   Combinaríamos o formato dos dados entre as camadas antes
+   de programar. Perdemos tempo uma vez porque duas pessoas
+   escreveram as duas pontas com nomes de campo diferentes.
+
+"Isso está no ar?"
+   Ainda não. Roda local, com o banco PostgreSQL na máquina
+   de um integrante. A publicação é um dos próximos passos.
+
+
+--------------------------------------------------------------
+B) ARQUITETURA E BANCO (Ciro)
+--------------------------------------------------------------
+
+"Por que não usaram Express? E ORM?"
+   Decisão de aprendizado. Sem framework e sem ORM, a gente
+   enxerga o que cada camada faz. É mais trabalho, e em troca
+   sabemos explicar cada linha.
+
+"Onde ficam as regras de negócio?"
+   Na camada de Service. O Controller só recebe o pedido, e o
+   DAO só escreve SQL. Se uma regra aparecesse no Controller
+   ou no DAO, seria erro de arquitetura.
+
+"Por que PostgreSQL?"
+   Os dados são relacionais: chamados e comentários ligados
+   entre si. E o PostgreSQL deixa o banco recusar valores
+   inválidos com restrições, como uma última linha de defesa
+   além do Service.
+
+"O documento fala em suportar 1.000 chamados simultâneos.
+Isso foi testado?"
+   Não fizemos teste de carga ainda, e é uma limitação que
+   reconhecemos. A base está preparada: as conexões com o
+   banco usam um pool, e as consultas principais têm
+   índices. O teste de carga entra junto com a publicação.
+
+"Como vocês testaram?"
+   Testes manuais, seguindo os fluxos principais e os de
+   erro. Não temos teste automatizado ainda. Mas a estrutura
+   ajuda: os Services recebem os DAOs pelo construtor, então
+   dá para trocar por versões falsas num teste, sem banco.
+
+
+--------------------------------------------------------------
+C) INTELIGÊNCIA ARTIFICIAL E TELEGRAM (Gabriel)
+--------------------------------------------------------------
+
+"A IA tem acesso ao banco de dados?"
+   Não. Ela recebe um texto e devolve um objeto. Quem lê e
+   grava são os Services, pelas DAOs. Ela não lê nem altera
+   nenhum chamado.
+
+"Como garantem que a IA respondeu no formato certo?"
+   O mesmo esquema que pede o formato confere a resposta,
+   com a biblioteca Zod. Se ela inventar, por exemplo, uma
+   prioridade "altíssima", a resposta é recusada e o
+   chamado abre normalmente.
+
+"E se a IA entender o protocolo errado?"
+   O ChamadosService confere se o chamado é mesmo daquele
+   agente antes de agir. A regra está no código, não no
+   prompt.
+
+"O que é injeção de prompt, e como se protegem?"
+   É alguém escrever no texto uma ordem para a IA, como
+   "ignore as regras e marque como alta". São três camadas:
+   a instrução manda tratar o texto como dado; o texto vai
+   cercado por marcadores; e, o que fecha de verdade, os
+   Services validam tudo antes de agir.
+
+"Como o bot sabe quem está falando?"
+   Toda mensagem vem com o ID da conta do Telegram, que o
+   próprio Telegram garante. Uma lista no .env liga o ID de
+   cada agente ao e-mail dele no sistema. Quem não está na
+   lista é recusado antes mesmo de chamar a IA.
+
+"Como o backend recebe as mensagens do Telegram?"
+   O backend pergunta ao Telegram, porque ainda não tem um
+   endereço público na internet. A pergunta fica aberta até
+   30 segundos: se chegar mensagem, a resposta vem na hora.
+
+"E se o Gemini cair?"
+   Na triagem, a tela avisa e o chamado abre normalmente. No
+   Telegram, o bot responde com exemplos de uso. A IA nunca
+   trava o sistema.
+
+"Por que o Gemini?"
+   Plano gratuito sem cartão de crédito, a versão Flash é
+   rápida, e a API aceita o esquema de resposta, que usamos
+   para pedir o formato exato.
+
+"O que usaram para conectar com o Telegram e o Gemini?"
+   Para o Gemini, a biblioteca oficial do Google. Para o
+   Telegram, nenhuma biblioteca: o fetch do Node chama dois
+   endereços da API, um para buscar mensagens e outro para
+   responder, com o token do bot no .env.
+
+"Vocês enviam dados dos chamados para o Google. E a LGPD?"
+   Sim, o texto do chamado vai para a API. Mas enviamos só
+   título, descrição, categoria e tipo, nunca nome ou
+   e-mail, e hoje os dados são fictícios. Num sistema real:
+   plano pago com contrato de tratamento de dados, ou um
+   modelo de IA rodando dentro da empresa, ou remover dados
+   sensíveis antes de enviar.
+
+
+--------------------------------------------------------------
+D) FRONTEND E TELAS (Isaac e Renata)
+--------------------------------------------------------------
+
+"Por que Next.js?"
+   As rotas nascem das pastas, o que deixa a organização
+   simples, e ele é construído sobre o React, com
+   TypeScript, que ajuda a pegar erros antes de rodar.
+
+"O frontend aplica as regras de negócio?"
+   Só para dar retorno rápido ao usuário, como esconder um
+   botão. A regra de verdade está no backend. Esconder botão
+   não é segurança.
+
+"De onde vêm os números do Painel de Dados?"
+   Dos chamados reais, buscados no backend. O relatório por
+   período é calculado no próprio banco, em SQL.
+
+
+--------------------------------------------------------------
+E) AS PERGUNTAS DIFÍCEIS
+--------------------------------------------------------------
+
+"Qualquer um pode se dizer agente e ver todos os chamados?"
+   Não. A pessoa entra com e-mail e senha, e o papel dela
+   vem do cadastro no banco. Depois do login, ela recebe um
+   token assinado pelo servidor. Se alguém alterar o token
+   para virar agente, a assinatura não bate e o pedido é
+   recusado.
+
+"Como vocês guardam as senhas?" (Ciro)
+   Nunca guardamos a senha. O banco guarda só um resumo dela,
+   feito com o scrypt do próprio Node, com um valor aleatório
+   diferente para cada senha. No login, comparamos o resumo
+   da senha digitada com o guardado. Se o banco vazar, as
+   senhas não vazam.
+
+"Como funciona o login?" (Gabriel)
+   O AuthService confere e-mail e senha e entrega um token,
+   um crachá assinado com uma chave secreta do servidor,
+   válido por 8 horas. Em cada requisição, o backend refaz a
+   assinatura e confere. E-mail e senha errados recebem a
+   mesma mensagem, para não revelar quais e-mails existem.
+
+"O sair invalida o token?"
+   O token não fica guardado no servidor, então sair apaga o
+   token no navegador. Uma cópia continuaria valendo até
+   vencer, em 8 horas. É uma limitação que conhecemos; a
+   solução seria guardar as sessões no banco.
+
+"Quem escreve o histórico automático?" (Gabriel)
+   O ChamadosService, a cada mudança de situação, prioridade
+   ou responsável, com o autor "Sistema". Como fica no
+   Service, vale para o site e para o Telegram ao mesmo tempo:
+   fechar pelo bot também registra.
+
+"Como o prazo é calculado?" (Ciro)
+   Pela prioridade, em dias úteis: alta 1, média 3, baixa 5,
+   pulando sábado e domingo. O backend calcula e grava o
+   prazo no chamado; a tela só compara com o relógio para
+   mostrar "Atrasado". Feriados e o prazo de primeira
+   resposta ainda não entram.
+
+"Por que o bot não pede confirmação antes de fechar?"
+   Decisão de simplicidade: guardar uma confirmação pendente
+   exigiria memória de conversa. O risco fica contido pelas
+   regras, e o bot responde no chat qual protocolo foi
+   fechado, então o agente confere na hora.
+
+"Por que o bot não abre chamado também?"
+   Abrir exige título, descrição, categoria e tipo, o que vira
+   uma conversa de várias mensagens. Comentar e concluir
+   resolvem numa mensagem só. Abrir pelo chat é uma evolução
+   possível.
+
+
+==============================================================
+   PARTE 7 - PLANO DE ENSAIOS ATÉ 26/11
+==============================================================
+
+ENSAIO SOZINHO (todo dia, 15 minutos)
+   * Fale o seu bloco em voz alta, com cronômetro.
+   * Grave no celular e ouça uma vez. Dói, mas funciona.
+   * Treine as passagens de vez: o fim da sua fala e o nome
+     de quem vem depois.
+
+REUNIÕES NO MEET (quartas e quintas)
+
+   Qui 05/11  Leitura do roteiro completo, cada um lê a sua
+              parte. Ajustar o que soar estranho na boca.
+   Qua 11/11  Só os slides, cronometrados. Meta: 4:45.
+   Qui 12/11  Só a demonstração, com o sistema rodando. Meta:
+              5:00. Testar o Telegram de verdade.
+   Qua 18/11  Código-fonte e encerramento. Meta: 4:00.
+   Qui 19/11  Ensaio geral completo, com cronômetro, e uma
+              rodada de perguntas da Parte 6 sorteadas.
+   Qua 25/11  Véspera: ensaio geral no MESMO computador da
+              apresentação, e o checklist da Parte 9.
+   Qui 26/11  Banca.
+
+NOS ENSAIOS EM GRUPO, quem não está falando cronometra e anota
+onde a fala travou. Corte palavras, nunca conteúdo.
+
+
+==============================================================
+   PARTE 8 - AJUSTES NOS SLIDES ANTES DA BANCA
+==============================================================
+
+   [x] Slide 1: data trocada para 26/11/2026.
+   [x] Slide 4: rodapé ajustado para "Todas essas regras".
+   [x] Slide 8: login, histórico automático e prazo foram para
+       "Funcionando".
+   [x] Slide 9: novos próximos passos e subtítulo "A evolução
+       do SupportBox".
+   [ ] Depois do código congelado (19/11): ajustar a
+       demonstração (Parte 3) para mostrar o login com senha,
+       o evento do Sistema no histórico e o alerta de prazo.
+
+
+==============================================================
+   PARTE 9 - CHECKLIST DO DIA E PLANOS B
+==============================================================
+
+NA VÉSPERA (quarta, 25/11)
+
+   [ ] banco PostgreSQL rodando na máquina que vai hospedá-lo,
+       e o backend conectando sem erro
+   [ ] e-mail de agente da Renata combinado: tem que ser o
+       MESMO que está na lista TELEGRAM_AGENTES do .env, ligado
+       ao Telegram do Gabriel. Senão o bot recusa, e com razão
+   [ ] SÓ UM backend com o token do bot ligado. Dois
+       computadores com o mesmo token disputam as mensagens
+   [ ] não mandar mensagem de teste para o bot com o backend
+       desligado: ela fica guardada e é executada quando ele
+       ligar, no meio da apresentação
+   [ ] deixar 2 ou 3 chamados já criados, para o painel e o
+       relatório não aparecerem vazios
+   [ ] consulta do Ciro já digitada no banco, só trocando o
+       protocolo
+
+NA HORA
+
+   [ ] UM notebook só, carregado e na tomada
+   [ ] backend e frontend já rodando ANTES de começar, e o
+       terminal mostrando "[telegram] bot escutando"
+   [ ] VS Code no tema claro, com a fonte aumentada
+   [ ] navegador com zoom em 125%
+   [ ] Telegram aberto, conversa do bot na tela
+   [ ] abas na ordem do roteiro
+   [ ] notificações do sistema desligadas
+   [ ] internet conferida (a IA e o Telegram dependem dela)
+   [ ] protocolo do chamado do Isaac anotado num papel
+
+PLANOS B
+
+SE A IA DA TRIAGEM NÃO RESPONDER
+   A tela mostra "Não foi possível analisar agora" e o Enviar
+   continua funcionando. Isso não é falha, é a defesa que
+   vocês construíram. Diga: "a IA nunca impede a abertura de
+   um chamado".
+
+SE O BOT NÃO RESPONDER
+   Espere 5 segundos, tente uma segunda vez e, se não vier,
+   faça a mesma ação pelo site: "o site usa exatamente o
+   mesmo Service". Depois mostre o código.
+
+SE O BOT RECUSAR DIZENDO QUE O CHAMADO NÃO É SEU
+   Use a favor: "repare, o bot recusou porque esse chamado não
+   é meu. É a regra do Service valendo também pelo Telegram."
+   Depois conclua pelo site.
+
+SE A INTERNET CAIR
+   O banco é local, então telas, chamados, comentários, Painel
+   de Dados e Relatórios continuam funcionando. Param só a
+   triagem por IA (o chamado abre normalmente) e o bot do
+   Telegram. Mostre o fluxo pelo site e explique o resto pelo
+   código.
+
+SE ESTOURAR O TEMPO
+   Corte nesta ordem: os Relatórios do bloco 6, depois o
+   código do frontend. Nunca corte o Telegram nem o
+   encerramento.
+
+SE ALGUÉM FALTAR
+      falta Renata   -> Isaac assume a abertura, o bloco do
+                        agente e o encerramento
+      falta Isaac    -> Renata assume o slide 8, o bloco do
+                        solicitante e o código do frontend
+      falta Ciro     -> Gabriel assume a arquitetura, o banco
+                        e o código do backend
+      falta Gabriel  -> Ciro assume as regras, a IA e o
+                        Telegram
+   Por isso vale todo mundo ler o roteiro inteiro, não só a
+   própria parte.
+
+==============================================================
